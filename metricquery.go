@@ -1,10 +1,6 @@
-package main
+package dotodag
 
-import (
-	"github.com/alecthomas/participle/v2"
-	"github.com/alecthomas/participle/v2/lexer"
-	"github.com/alecthomas/repr"
-)
+import "github.com/alecthomas/participle/v2/lexer"
 
 // https://docs.datadoghq.com/metrics/#anatomy-of-a-metric-query
 type MetricQuery struct {
@@ -41,16 +37,4 @@ type FunctionArgs struct {
 	Identifier *string  `| @Ident ( @"." @Ident )*`
 	String     *string  `| @(String|Char|RawString)`
 	Number     *float64 `| @(Float|Int)`
-}
-
-func main() {
-	parser := participle.MustBuild[MetricQuery](
-		participle.Unquote("String"),
-	)
-
-	query, err := parser.ParseString("", `sum:kubernetes.containers.state.terminated{reason:oomkilled} by    {kube_cluster_name,kube_deployment}`)
-	if err != nil {
-		panic(err)
-	}
-	repr.Println(query)
 }
