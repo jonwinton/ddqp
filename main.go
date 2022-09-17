@@ -1,44 +1,56 @@
 package main
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
+	"github.com/alecthomas/repr"
 )
 
 // https://docs.datadoghq.com/metrics/#anatomy-of-a-metric-query
 type MetricQuery struct {
 	Pos lexer.Position
 
-	SpaceAggregator string `@Ident ":"`
-	MetricName      string `@Ident {`
+	Query []*Query `@@`
+}
+
+type Query struct {
+	Pos lexer.Position
+
+	Aggregator string      `@Ident ":"`
+	MetricName string      `@Ident( @"." @Ident)*`
+	Filters    []*Filter   `"{" ( @@ ( "," @@ )* )? "}"`
+	Function   []*Function `( @@ ( "." @@ )* )?`
+	By         string      `Ident`
+	Grouping   []string    `"{" ( @Ident ( "," @Ident )* )? "}"`
+}
+type Filter struct {
+	Key   string `@Ident ":"`
+	Value string `@(String|Ident)`
+}
+type Function struct {
+	Name string          `"." @Ident`
+	Args []*FunctionArgs `"(" ( @@ ( "," @@ )* )? ")"`
+}
+
+type Bool bool
+
+func (b *Bool) Capture(v []string) error { *b = v[0] == "true"; return nil }
+
+type FunctionArgs struct {
+	Boolean    *Bool    `  @("true"|"false")`
+	Identifier *string  `| @Ident ( @"." @Ident )*`
+	String     *string  `| @(String|Char|RawString)`
+	Number     *float64 `| @(Float|Int)`
 }
 
 func main() {
-	tomlLexer := lexer.MustSimple([]lexer.SimpleRule{
-		{"DateTime", `\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?(-\d\d:\d\d)?`},
-		{"Date", `\d\d\d\d-\d\d-\d\d`},
-		{"Time", `\d\d:\d\d:\d\d(\.\d+)?`},
-		{"Ident", `[a-zA-Z_][a-zA-Z_0-9]*`},
-		{"String", `"[^"]*"`},
-		{"Number", `[-+]?[.0-9]+\b`},
-		{"Punct", `\[|]|[-!()+/*=,]`},
-		{"comment", `#[^\n]+`},
-		{"whitespace", `\s+`},
-	})
 	parser := participle.MustBuild[MetricQuery](
-		participle.Lexer(tomlLexer),
 		participle.Unquote("String"),
 	)
 
-	fmt.Println(parser)
-	query, err := parser.ParseString("", "avg:system.disk.free{*}.rollup(avg, 60)")
+	query, err := parser.ParseString("", `sum:kubernetes.containers.state.terminated{reason:oomkilled} by    {kube_cluster_name,kube_deployment}`)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(query)
-	log.Println("hi")
-	fmt.Println("hi")
+	repr.Println(query)
 }
