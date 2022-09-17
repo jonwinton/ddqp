@@ -52,6 +52,12 @@ func Test_MetricQuery(t *testing.T) {
 			wantErr:  true,
 			printAST: false,
 		},
+		{
+			name:     "test underscores in metric name",
+			query:    "sum:prometheus_metric_source{foo:bar} by {baz}",
+			wantErr:  false,
+			printAST: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
