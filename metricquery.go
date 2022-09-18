@@ -14,14 +14,14 @@ type Query struct {
 
 	Aggregator string      `@Ident ":"`
 	MetricName string      `@Ident( @"." @Ident)*`
-	Filters    []*Filter   `"{" ( @@ ( "," @@ )* )? "}"`
+	Filters    []*Filter   `"{" ( @@ ( "," @@ )* | "*" )? "}"`
 	Function   []*Function `( @@ ( "." @@ )* )?`
 	By         string      `Ident`
 	Grouping   []string    `"{" ( @Ident ( "," @Ident )* )? "}"`
 }
 type Filter struct {
 	Key   string `@Ident ":"`
-	Value string `@(String|Ident)`
+	Value string `@Ident`
 }
 type Function struct {
 	Name string          `"." @Ident`
@@ -35,6 +35,6 @@ func (b *Bool) Capture(v []string) error { *b = v[0] == "true"; return nil }
 type FunctionArgs struct {
 	Boolean    *Bool    `  @("true"|"false")`
 	Identifier *string  `| @Ident ( @"." @Ident )*`
-	String     *string  `| @(String|Char|RawString)`
+	String     *string  `| @(String)`
 	Number     *float64 `| @(Float|Int)`
 }
