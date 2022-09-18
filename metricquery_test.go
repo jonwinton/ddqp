@@ -3,34 +3,12 @@ package dotodag
 import (
 	"testing"
 
-	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/repr"
 	"github.com/stretchr/testify/require"
 )
 
-func TestBool_Capture(t *testing.T) {
-	type args struct {
-		v []string
-	}
-	tests := []struct {
-		name    string
-		b       *Bool
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := tt.b.Capture(tt.args.v); (err != nil) != tt.wantErr {
-				t.Errorf("Bool.Capture() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
 func Test_MetricQuery(t *testing.T) {
-	parser := participle.MustBuild[MetricQuery](participle.Unquote())
+	parser := NewMetricQueryParser()
 
 	tests := []struct {
 		name     string
@@ -55,6 +33,12 @@ func Test_MetricQuery(t *testing.T) {
 		{
 			name:     "test underscores in metric name",
 			query:    "sum:prometheus_metric_source{foo:bar} by {baz}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "test hyphens in filters name",
+			query:    "sum:prometheus_metric_source{foo:bar-bar} by {baz}",
 			wantErr:  false,
 			printAST: false,
 		},
