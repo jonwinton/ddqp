@@ -1,19 +1,24 @@
 package main
 
 import (
-	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/repr"
 	"github.com/jonwinton/dotodag-ql"
 )
 
 func main() {
-	parser := participle.MustBuild[dotodag.MetricQuery](
-		participle.Unquote("String"),
-	)
+	metricQueryParser := dotodag.NewMetricQueryParser()
+	metricMonitorParser := dotodag.NewMetricMonitorParser()
 
-	query, err := parser.ParseString("", `sum:kubernetes.containers.state.terminated{reason:oomkilled} by    {kube_cluster_name,kube_deployment}`)
+	val, err := metricQueryParser.ParseString("", `sum:kubernetes.containers.state.terminated{reason:oomkilled-foo} by    {kube_cluster_name,kube_deployment}`)
 	if err != nil {
 		panic(err)
 	}
-	repr.Println(query)
+	repr.Println(val)
+
+	nextVal, err := metricMonitorParser.ParseString("", `avg(last_5m):max:system.disk.in_use{reason:oomkilled} by {host} < 1.2`)
+	if err != nil {
+		panic(err)
+	}
+
+	repr.Println(nextVal)
 }
