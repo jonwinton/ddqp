@@ -14,7 +14,7 @@ jobs:
       - name: Init Hermit
         run: ./bin/hermit env -r >> $GITHUB_ENV
       - name: Test parsing
-        run: go test ./...
+        run: gotestsum -f standard-verbose
   lint:
     name: Lint
     runs-on: ubuntu-latest
