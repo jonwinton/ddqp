@@ -2,12 +2,12 @@ package main
 
 import (
 	"github.com/alecthomas/repr"
-	"github.com/jonwinton/dotodag-ql"
+	"github.com/jonwinton/ddqp"
 )
 
 func main() {
-	metricQueryParser := dotodag.NewMetricQueryParser()
-	metricMonitorParser := dotodag.NewMetricMonitorParser()
+	metricQueryParser := ddqp.NewMetricQueryParser()
+	metricMonitorParser := ddqp.NewMetricMonitorParser()
 
 	val, err := metricQueryParser.ParseString("", `sum:kubernetes.containers.state.terminated{reason:oomkilled-foo} by    {kube_cluster_name,kube_deployment}`)
 	if err != nil {

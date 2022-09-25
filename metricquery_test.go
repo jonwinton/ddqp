@@ -1,4 +1,4 @@
-package dotodag
+package ddqp
 
 import (
 	"testing"

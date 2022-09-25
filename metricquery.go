@@ -1,4 +1,4 @@
-package dotodag
+package ddqp
 
 // https://docs.datadoghq.com/metrics/#anatomy-of-a-metric-query
 
