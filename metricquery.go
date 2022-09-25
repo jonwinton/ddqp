@@ -62,7 +62,7 @@ type MetricQueryParser struct {
 }
 
 // Parse sanitizes the query string and returns the AST and any error.
-func (mqp *MetricQueryParser) Parse(query string) (*MetricQuery, error) {
+func (mqp *MetricQueryParser) Parse(query string) (ParsedResponse, error) {
 	// the parser doesn't handle queries that are split up across multiple lines
 	sanitized := strings.ReplaceAll(query, "\n", "")
 	// return the raw parsed outpu
