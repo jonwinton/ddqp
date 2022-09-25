@@ -12,12 +12,12 @@ type MetricQuery struct {
 type Query struct {
 	Pos lexer.Position
 
-	Aggregator string      `@Ident ":"`
-	MetricName string      `@Ident( @"." @Ident)*`
-	Filters    *MetricFilter  `"{" @@ "}"`
-	Function   []*Function `( @@ ( "." @@ )* )?`
-	By         string      `Ident`
-	Grouping   []string    `"{" ( @Ident ( "," @Ident )* )? "}"`
+	Aggregator string        `@Ident ":"`
+	MetricName string        `@Ident( @"." @Ident)*`
+	Filters    *MetricFilter `"{" @@ "}"`
+	Function   []*Function   `( @@ ( "." @@ )* )?`
+	By         string        `Ident`
+	Grouping   []string      `"{" ( @Ident ( "," @Ident )* )? "}"`
 }
 type Filter struct {
 	Key   string `@Ident ":"`
