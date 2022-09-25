@@ -1,11 +1,11 @@
 package ddqp
 
 import (
-	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
 
 var (
+	// This is the primary lexer for all parsers
 	// nolint:govet
 	lex = lexer.MustSimple([]lexer.SimpleRule{
 		{"Comment", `(?i)rem[^\n]*`},
@@ -19,16 +19,9 @@ var (
 	})
 )
 
-func NewMetricQueryParser() *participle.Parser[MetricQuery] {
-	return participle.MustBuild[MetricQuery](
-		participle.Lexer(lex),
-		participle.Unquote("String"),
-	)
+type Parser interface {
+	Parse(string) (ParsedResponse, error)
 }
 
-func NewMetricMonitorParser() *participle.Parser[MetricMonitor] {
-	return participle.MustBuild[MetricMonitor](
-		participle.Lexer(lex),
-		participle.Unquote("String"),
-	)
+type ParsedResponse interface {
 }

@@ -37,7 +37,7 @@ func Test_MetricMonitor(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ast, err := parser.ParseString("", tt.query)
+			ast, err := parser.Parse(tt.query)
 			if (err != nil) != tt.wantErr {
 				require.NoError(t, err)
 			}
