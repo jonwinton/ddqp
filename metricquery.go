@@ -1,8 +1,9 @@
 package dotodag
 
+// https://docs.datadoghq.com/metrics/#anatomy-of-a-metric-query
+
 import "github.com/alecthomas/participle/v2/lexer"
 
-// https://docs.datadoghq.com/metrics/#anatomy-of-a-metric-query
 type MetricQuery struct {
 	Pos lexer.Position
 
