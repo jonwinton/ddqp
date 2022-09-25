@@ -7,9 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// env:prod AND resource_name NOT IN (!resource_name:A, !resource_name:B)
-// env:shop.ist AND availability-zone IN (us-east-1a, us-east-1b, us-east4-b)} by {availability-zone}
-// avg:mymetric{env:prod AND resource_name NOT IN (!resource_name:A, !resource_name:B)}
 func Test_MetricMonitor(t *testing.T) {
 	parser := NewMetricMonitorParser()
 

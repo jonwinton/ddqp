@@ -15,23 +15,29 @@ func NewMetricFilterParser() *participle.Parser[MetricFilter] {
 type MetricFilter struct {
 	Pos lexer.Position
 
-	Parameters []*Param `( @@ ( ("," | "AND" | "OR" ) @@ )* | "*" )?`
+	Parameters []*Param `( @@ ( ("," | "AND" | "and" | "OR" | "or" ) @@ )* | "*" )?`
 }
 
 type Param struct {
-	Negative  bool   `@"!"?`
-	FilterKey string `@Ident`
-	// Group           []*Param         `| "(" @@ ")" )`
+	GroupedFilter *GroupedFilter `"(" @@ ")"`
+	SimpleFilter  *SimpleFilter  `| @@`
+}
+
+type SimpleFilter struct {
+	Negative        bool             `@"!"?`
+	FilterKey       string           `@Ident`
 	FilterSeparator *FilterSeparator `@@`
 	FilterValue     *FilterValue     `@@`
 }
 
-// typeg
+type GroupedFilter struct {
+	Parameters []*Param `( @@ ( ("," | "AND" | "and" | "OR" | "or" ) @@ )* | "*" )?`
+}
 
 type FilterSeparator struct {
 	Colon bool `@(":" `
-	In    bool `| "IN"`
-	NotIn bool `| "NOT" "IN")`
+	In    bool `| ("IN" | "in") `
+	NotIn bool `| ("NOT" "IN" | "not" "in") )`
 }
 
 type FilterKey struct {
@@ -41,7 +47,7 @@ type FilterKey struct {
 
 type FilterValue struct {
 	SimpleValue *Value   `	@@`
-	ListValue   []*Value `| ( "(" ( @@ ( "," @@ | "OR" @@ )* )? ")" )?`
+	ListValue   []*Value `| ( "(" ( @@ ( "," @@ | "OR" @@ | "or" @@ )* )? ")" )?`
 }
 
 type Value struct {
