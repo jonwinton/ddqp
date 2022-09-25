@@ -66,6 +66,12 @@ func Test_MetricQuery(t *testing.T) {
 			wantErr:  false,
 			printAST: false,
 		},
+		{
+			name:     "test docs example query",
+			query:    "avg:system.cpu.user{env:staging AND (availability-zone:us-east-1a OR availability-zone:us-east-1c)} by {availability-zone}",
+			wantErr:  false,
+			printAST: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
