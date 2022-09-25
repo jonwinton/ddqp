@@ -62,19 +62,19 @@ func Test_MetricMonitorFilter(t *testing.T) {
 			name:     "test AND then parens",
 			query:    "a:b AND (c:d OR e:f)",
 			wantErr:  false,
-			printAST: true,
+			printAST: false,
 		},
 		{
 			name:     "test lowercase operator suppoer",
 			query:    "a:b and (c:d or e:f) AND g not in (h, i)",
 			wantErr:  false,
-			printAST: true,
+			printAST: false,
 		},
 		{
 			name:     "test example from DataDog docs",
 			query:    "env:shop.ist AND availability-zone IN (us-east-1a, us-east-1b, us-east4-b)",
 			wantErr:  false,
-			printAST: true,
+			printAST: false,
 		},
 		{
 			name:     "test another example from DataDog docs",

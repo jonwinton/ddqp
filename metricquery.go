@@ -1,8 +1,9 @@
 package dotodag
 
+// https://docs.datadoghq.com/metrics/#anatomy-of-a-metric-query
+
 import "github.com/alecthomas/participle/v2/lexer"
 
-// https://docs.datadoghq.com/metrics/#anatomy-of-a-metric-query
 type MetricQuery struct {
 	Pos lexer.Position
 
@@ -12,12 +13,12 @@ type MetricQuery struct {
 type Query struct {
 	Pos lexer.Position
 
-	Aggregator string      `@Ident ":"`
-	MetricName string      `@Ident( @"." @Ident)*`
-	Filters    *MetricFilter  `"{" @@ "}"`
-	Function   []*Function `( @@ ( "." @@ )* )?`
-	By         string      `Ident`
-	Grouping   []string    `"{" ( @Ident ( "," @Ident )* )? "}"`
+	Aggregator string        `@Ident ":"`
+	MetricName string        `@Ident( @"." @Ident)*`
+	Filters    *MetricFilter `"{" @@ "}"`
+	Function   []*Function   `( @@ ( "." @@ )* )?`
+	By         string        `Ident`
+	Grouping   []string      `"{" ( @Ident ( "," @Ident )* )? "}"`
 }
 type Filter struct {
 	Key   string `@Ident ":"`

@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// nolint:govet
 	lex = lexer.MustSimple([]lexer.SimpleRule{
 		{"Comment", `(?i)rem[^\n]*`},
 		{"String", `"(\\"|[^"])*"`},
