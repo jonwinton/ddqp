@@ -19,16 +19,13 @@ var (
 	})
 )
 
-func NewMetricQueryParser() *participle.Parser[MetricQuery] {
-	return participle.MustBuild[MetricQuery](
-		participle.Lexer(lex),
-		participle.Unquote("String"),
-	)
-}
-
 func NewMetricMonitorParser() *participle.Parser[MetricMonitor] {
 	return participle.MustBuild[MetricMonitor](
 		participle.Lexer(lex),
 		participle.Unquote("String"),
 	)
+}
+
+type Parser interface {
+	Parse(string) (*MetricQuery, error)
 }
