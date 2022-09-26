@@ -30,7 +30,7 @@ func NewMetricMonitorParser() Parser {
 	return mmp
 }
 
-// MetricQueryParser is parser returned when calling NewMetricQueryParser.
+// MetricMonitorParser is parser returned when calling NewMetricMonitorParser.
 type MetricMonitorParser struct {
 	parser *participle.Parser[MetricMonitor]
 }
