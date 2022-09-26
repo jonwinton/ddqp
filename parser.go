@@ -18,10 +18,3 @@ var (
 		{"whitespace", `[ \t]+`},
 	})
 )
-
-type Parser interface {
-	Parse(string) (ParsedResponse, error)
-}
-
-type ParsedResponse interface {
-}

@@ -1,16 +1,8 @@
 package ddqp
 
 import (
-	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
-
-func NewMetricFilterParser() *participle.Parser[MetricFilter] {
-	return participle.MustBuild[MetricFilter](
-		participle.Lexer(lex),
-		participle.Unquote("String"),
-	)
-}
 
 type MetricFilter struct {
 	Pos lexer.Position

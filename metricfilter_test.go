@@ -3,12 +3,20 @@ package ddqp
 import (
 	"testing"
 
+	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/repr"
 	"github.com/stretchr/testify/require"
 )
 
+func newMetricFilterParser() *participle.Parser[MetricFilter] {
+	return participle.MustBuild[MetricFilter](
+		participle.Lexer(lex),
+		participle.Unquote("String"),
+	)
+}
+
 func Test_MetricMonitorFilter(t *testing.T) {
-	parser := NewMetricFilterParser()
+	parser := newMetricFilterParser()
 
 	tests := []struct {
 		name     string

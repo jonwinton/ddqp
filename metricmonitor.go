@@ -19,7 +19,7 @@ type MetricMonitor struct {
 
 // NewMetricMonitorParser returns a Parser which is capable of interpretting
 // a metric query.
-func NewMetricMonitorParser() Parser {
+func NewMetricMonitorParser() *MetricMonitorParser {
 	mmp := &MetricMonitorParser{
 		parser: participle.MustBuild[MetricMonitor](
 			participle.Lexer(lex),
@@ -36,7 +36,7 @@ type MetricMonitorParser struct {
 }
 
 // Parse sanitizes the query string and returns the AST and any error.
-func (mmp *MetricMonitorParser) Parse(query string) (ParsedResponse, error) {
+func (mmp *MetricMonitorParser) Parse(query string) (*MetricMonitor, error) {
 	// the parser doesn't handle queries that are split up across multiple lines
 	sanitized := strings.ReplaceAll(query, "\n", "")
 	// return the raw parsed outpu
