@@ -19,9 +19,9 @@ type Query struct {
 	Aggregator string        `@Ident ":"`
 	MetricName string        `@Ident( @"." @Ident)*`
 	Filters    *MetricFilter `"{" @@ "}"`
+	By         string        `Ident?`
+	Grouping   []string      `"{"? ( @Ident ( "," @Ident )* )? "}"?`
 	Function   []*Function   `( @@ ( "." @@ )* )?`
-	By         string        `Ident`
-	Grouping   []string      `"{" ( @Ident ( "," @Ident )* )? "}"`
 }
 type Filter struct {
 	Key   string `@Ident ":"`
