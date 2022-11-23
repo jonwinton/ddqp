@@ -77,14 +77,15 @@ func (me *MetricExpression) GetQueries() map[string]string {
 
 	queryMap := make(map[string]string)
 	for key, value := range queries {
-		queryMap[toCharStr(key+1)] = value
+		queryMap[fmt.Sprintf("%d", key)] = value
+		// queryMap[toCharStr(key+1)] = value
 	}
 	return queryMap
 }
 
-func toCharStr(i int) string {
-	return strings.ToLower(string('A' - 1 + i))
-}
+// func toCharStr(i int) string {
+// 	return strings.ToLower(string('A' - 1 + i))
+// }
 
 // NewMetricExpressionParser returns a Parser which is capable of interpretting
 // a metric expression.

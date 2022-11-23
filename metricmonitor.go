@@ -14,7 +14,7 @@ type MetricMonitor struct {
 	EvaluationWindow string       `"(" @Ident ")" ":"`
 	MetricQuery      *MetricQuery `@@`
 	Comparator       string       `@( ">" | ">" "=" | "<" | "<" "=" )`
-	Threshold        float64      `@(Int|Float)`
+	Threshold        float64      `@(Ident)`
 }
 
 // NewMetricMonitorParser returns a Parser which is capable of interpretting

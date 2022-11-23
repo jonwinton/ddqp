@@ -90,6 +90,12 @@ func Test_MetricMonitorFilter(t *testing.T) {
 			wantErr:  false,
 			printAST: false,
 		},
+		{
+			name:     "test int and string",
+			query:    "code:2xx",
+			wantErr:  false,
+			printAST: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
