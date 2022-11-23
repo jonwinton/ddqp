@@ -1,6 +1,7 @@
 package ddqp
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/alecthomas/participle/v2"
@@ -10,38 +11,59 @@ import (
 type MetricQuery struct {
 	Pos lexer.Position
 
-	Query []*Query `@@`
+	Query []*Query `parser:"@@"`
+}
+
+func (mq *MetricQuery) String() string {
+	return mq.Query[0].String()
 }
 
 type Query struct {
 	Pos lexer.Position
 
-	Aggregator string        `@Ident ":"`
-	MetricName string        `@Ident( @"." @Ident)*`
-	Filters    *MetricFilter `"{" @@ "}"`
+	Aggregator string        `parser:"@Ident ':'"`
+	MetricName string        `parser:"@Ident( @'.' @Ident)*"`
+	Filters    *MetricFilter `parser:"'{' @@ '}'"`
 	By         string        `Ident?`
 	Grouping   []string      `"{"? ( @Ident ( "," @Ident )* )? "}"?`
 	Function   []*Function   `( @@ ( "." @@ )* )?`
 }
-type Filter struct {
-	Key   string `@Ident ":"`
-	Value string `@Ident`
+
+func (q *Query) String() string {
+	base := fmt.Sprintf("%s:%s{%s}", q.Aggregator, q.MetricName, q.Filters.String())
+
+	if len(q.Grouping) > 0 {
+		base = fmt.Sprintf("%s by {%s}", base, strings.Join(q.Grouping, ","))
+	}
+
+	if len(q.Function) > 0 {
+		funcs := []string{}
+		for _, v := range q.Function {
+			funcs = append(funcs, v.String())
+		}
+		return fmt.Sprintf("%s.%s", base, strings.Join(funcs, "."))
+	}
+
+	return base
 }
+
 type Function struct {
-	Name string          `"." @Ident`
-	Args []*FunctionArgs `"(" ( @@ ( "," @@ )* )? ")"`
+	Name string   `"." @Ident`
+	Args []*Value `"(" ( @@ ( "," @@ )* )? ")"`
+}
+
+func (f *Function) String() string {
+	args := []string{}
+	for _, v := range f.Args {
+		args = append(args, v.String())
+	}
+	return fmt.Sprintf("%s(%s)", f.Name, strings.Join(args, ","))
 }
 
 type Bool bool
 
 func (b *Bool) Capture(v []string) error { *b = v[0] == "true"; return nil }
-
-type FunctionArgs struct {
-	Boolean    *Bool    `  @("true"|"false")`
-	Identifier *string  `| @Ident ( @"." @Ident )*`
-	String     *string  `| @(String)`
-	Number     *float64 `| @(Float|Int)`
-}
+func (b *Bool) String() string           { return fmt.Sprintf("%v", *b) }
 
 // NewMetricQueryParser returns a Parser which is capable of interpretting
 // a metric query.
