@@ -25,13 +25,35 @@ func (o *Operator) Capture(s []string) error {
 }
 
 type ExprValue struct {
-	Number        *float64          `  @(Float|Int)`
+	Subexpression *MetricExpression `  "(" @@ ")"`
 	MetricQuery   *MetricQuery      `| @@`
-	Subexpression *MetricExpression `| "(" @@ ")"`
+	Number        *float64          `|  @(Float|Int)`
+}
+
+func (ex *ExprValue) GetQueries() []string {
+	strs := []string{}
+	if ex.Subexpression != nil {
+		m := ex.Subexpression.GetQueries()
+		for _, v := range m {
+			strs = append(strs, v)
+		}
+		return strs
+	}
+
+	if ex.MetricQuery != nil {
+		strs = append(strs, ex.MetricQuery.String())
+		return strs
+	}
+
+	return []string{fmt.Sprintf("%d", ex.Number)}
 }
 
 type Factor struct {
 	Base *ExprValue `@@`
+}
+
+func (f *Factor) GetQueries() []string {
+	return f.Base.GetQueries()
 }
 
 type OpFactor struct {
@@ -45,10 +67,10 @@ type Term struct {
 }
 
 func (t *Term) GetQueries() []string {
-	queries := []string{t.Left.String()}
+	queries := t.Left.GetQueries()
 
 	for _, v := range t.Right {
-		queries = append(queries, v.Factor.String())
+		queries = append(queries, v.Factor.GetQueries()...)
 	}
 
 	return queries
@@ -77,15 +99,15 @@ func (me *MetricExpression) GetQueries() map[string]string {
 
 	queryMap := make(map[string]string)
 	for key, value := range queries {
-		queryMap[fmt.Sprintf("%d", key)] = value
-		// queryMap[toCharStr(key+1)] = value
+		queryMap[toCharStr(key+1)] = value
 	}
 	return queryMap
 }
 
-// func toCharStr(i int) string {
-// 	return strings.ToLower(string('A' - 1 + i))
-// }
+func toCharStr(i int) string {
+	const abc = "abcdefghijklmnopqrstuvwxyz"
+	return abc[i-1 : i]
+}
 
 // NewMetricExpressionParser returns a Parser which is capable of interpretting
 // a metric expression.
@@ -166,4 +188,29 @@ func (mep *MetricExpressionParser) Parse(expr string) (*MetricExpression, error)
 	sanitized := strings.ReplaceAll(expr, "\n", "")
 	// return the raw parsed outpu
 	return mep.parser.ParseString("", sanitized)
+}
+
+// Metric Breakdown
+// Convert into formulas
+type MetricExpressionFormula struct {
+	Expressions map[string]string
+	Formula     string
+}
+
+func NewMetricExpressionFormula(expr *MetricExpression) *MetricExpressionFormula {
+	exprFormula := &MetricExpressionFormula{
+		Expressions: map[string]string{},
+		Formula:     "",
+	}
+
+	exprFormula.Expressions = expr.GetQueries()
+
+	formula := expr.String()
+
+	for key, value := range exprFormula.Expressions {
+		formula = strings.ReplaceAll(formula, value, key)
+	}
+
+	exprFormula.Formula = formula
+	return exprFormula
 }
