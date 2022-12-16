@@ -127,7 +127,6 @@ func (fv *FilterValue) String() string {
 	return fv.SimpleValue.String()
 }
 
-// TODO: I think this is used multiple places. Need to update
 type Value struct {
 	Separator  *FilterValueSeparator ` @@`
 	Boolean    *Bool                 `|  @("true"|"false")`

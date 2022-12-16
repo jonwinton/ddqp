@@ -30,22 +30,22 @@ type ExprValue struct {
 	Number        *float64          `|  @(Float|Int)`
 }
 
-func (ex *ExprValue) GetQueries() []string {
+func (expr *ExprValue) GetQueries() []string {
 	strs := []string{}
-	if ex.Subexpression != nil {
-		m := ex.Subexpression.GetQueries()
+	if expr.Subexpression != nil {
+		m := expr.Subexpression.GetQueries()
 		for _, v := range m {
 			strs = append(strs, v)
 		}
 		return strs
 	}
 
-	if ex.MetricQuery != nil {
-		strs = append(strs, ex.MetricQuery.String())
+	if expr.MetricQuery != nil {
+		strs = append(strs, expr.MetricQuery.String())
 		return strs
 	}
 
-	return []string{fmt.Sprintf("%d", ex.Number)}
+	return []string{fmt.Sprintf("%d", expr.Number)}
 }
 
 type Factor struct {
@@ -138,14 +138,14 @@ func (o Operator) String() string {
 	panic("unsupported operator")
 }
 
-func (v *ExprValue) String() string {
-	if v.Number != nil {
-		return fmt.Sprintf("%g", *v.Number)
+func (expr *ExprValue) String() string {
+	if expr.Number != nil {
+		return fmt.Sprintf("%g", *expr.Number)
 	}
-	if v.MetricQuery != nil {
-		return v.MetricQuery.String()
+	if expr.MetricQuery != nil {
+		return expr.MetricQuery.String()
 	}
-	return "(" + v.Subexpression.String() + ")"
+	return "(" + expr.Subexpression.String() + ")"
 }
 
 func (f *Factor) String() string {
@@ -169,9 +169,9 @@ func (o *OpTerm) String() string {
 	return fmt.Sprintf("%s %s", o.Operator, o.Term)
 }
 
-func (e *MetricExpression) String() string {
-	out := []string{e.Left.String()}
-	for _, r := range e.Right {
+func (me *MetricExpression) String() string {
+	out := []string{me.Left.String()}
+	for _, r := range me.Right {
 		out = append(out, r.String())
 	}
 	return strings.Join(out, " ")
@@ -190,8 +190,7 @@ func (mep *MetricExpressionParser) Parse(expr string) (*MetricExpression, error)
 	return mep.parser.ParseString("", sanitized)
 }
 
-// Metric Breakdown
-// Convert into formulas
+// MetricExpressionFormula breaks down a query into its formulaic parts
 type MetricExpressionFormula struct {
 	Expressions map[string]string
 	Formula     string
