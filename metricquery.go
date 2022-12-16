@@ -21,16 +21,24 @@ func (mq *MetricQuery) String() string {
 type Query struct {
 	Pos lexer.Position
 
-	Aggregator string        `parser:"@Ident ':'"`
-	MetricName string        `parser:"@Ident( @'.' @Ident)*"`
-	Filters    *MetricFilter `"{" @@ "}"`
-	By         string        `parser:"Ident?"`
-	Grouping   []string      `parser:"'{'? ( @Ident ( ',' @Ident )* )? '}'?"`
-	Function   []*Function   `parser:"( @@ ( '.' @@ )* )?"`
+	Aggregator                string        `parser:"@Ident"`
+	SpaceAggregationCondition string        `parser:"( '(' @SpaceAggregatorCondition ')' )?"`
+	Separator                 string        `parser:"':'"`
+	MetricName                string        `parser:"@Ident( @'.' @Ident)*"`
+	Filters                   *MetricFilter `parser:"'{' @@ '}'"`
+	By                        string        `parser:"Ident?"`
+	Grouping                  []string      `parser:"'{'? ( @Ident ( ',' @Ident )* )? '}'?"`
+	Function                  []*Function   `parser:"( @@ ( '.' @@ )* )?"`
 }
 
 func (q *Query) String() string {
-	base := fmt.Sprintf("%s:%s{%s}", q.Aggregator, q.MetricName, q.Filters.String())
+	base := q.Aggregator
+
+	if q.SpaceAggregationCondition != "" {
+		base = fmt.Sprintf("%s(%s)", base, q.SpaceAggregationCondition)
+	}
+
+	base = fmt.Sprintf("%s:%s{%s}", base, q.MetricName, q.Filters.String())
 
 	if len(q.Grouping) > 0 {
 		base = fmt.Sprintf("%s by {%s}", base, strings.Join(q.Grouping, ","))

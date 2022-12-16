@@ -10,6 +10,7 @@ var (
 	lex = lexer.MustSimple([]lexer.SimpleRule{
 		{"Comment", `(?i)rem[^\n]*`},
 		{"String", `"(\\"|[^"])*"`},
+		{"SpaceAggregatorCondition", `v: v[<>=]*([0-9]*[.])?[0-9]+`},
 		{"Ident", `[a-zA-Z0-9_][\w\d-\*\.]*`},
 		{"Float", `[+-]?([0-9]*[.])?[0-9]+`},
 		{"Int", `\d+`},

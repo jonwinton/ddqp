@@ -73,6 +73,24 @@ func Test_MetricQuery(t *testing.T) {
 			wantErr:  false,
 			printAST: false,
 		},
+		{
+			name:     "test less than condition in count",
+			query:    "count(v: v<=1):metric.name{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "test greater than condition in count",
+			query:    "count(v: v>=1.53):metric.name{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "test equal than condition in count",
+			query:    "count(v: v>=100):metric.name{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
