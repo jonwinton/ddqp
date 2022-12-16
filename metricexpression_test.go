@@ -83,11 +83,11 @@ func Test_MetricExpressionFormula(t *testing.T) {
 	}{
 		{
 			name:    "addition formula",
-			query:   "sum:metric.name{foo:bar} + sum:metric.name_two{foo:bar}",
+			query:   "sum:metric.name{foo:bar} + sum:metric.name_two{foo:bar, baz:bang}",
 			formula: "a + b",
 			expressions: map[string]string{
 				"a": "sum:metric.name{foo:bar}",
-				"b": "sum:metric.name_two{foo:bar}",
+				"b": "sum:metric.name_two{foo:bar, baz:bang}",
 			},
 			wantErr:  false,
 			printAST: false,
@@ -99,7 +99,7 @@ func Test_MetricExpressionFormula(t *testing.T) {
 			expressions: map[string]string{
 				"a": "sum:metric.name{foo:bar}",
 				"b": "sum:metric.name_two{foo:bar}",
-				"c": "sum:metric.name_three{}",
+				"c": "sum:metric.name_three{*}",
 			},
 			wantErr:  false,
 			printAST: false,

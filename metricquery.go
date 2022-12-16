@@ -23,10 +23,10 @@ type Query struct {
 
 	Aggregator string        `parser:"@Ident ':'"`
 	MetricName string        `parser:"@Ident( @'.' @Ident)*"`
-	Filters    *MetricFilter `parser:"'{' @@ '}'"`
-	By         string        `Ident?`
-	Grouping   []string      `"{"? ( @Ident ( "," @Ident )* )? "}"?`
-	Function   []*Function   `( @@ ( "." @@ )* )?`
+	Filters    *MetricFilter `"{" @@ "}"`
+	By         string        `parser:"Ident?"`
+	Grouping   []string      `parser:"'{'? ( @Ident ( ',' @Ident )* )? '}'?"`
+	Function   []*Function   `parser:"( @@ ( '.' @@ )* )?"`
 }
 
 func (q *Query) String() string {

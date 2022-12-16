@@ -10,30 +10,39 @@ import (
 type MetricFilter struct {
 	Pos lexer.Position
 
-	Parameters []*Param `( @@ ( ("," | "AND" | "and" | "OR" | "or" ) @@ )* | "*" )?`
+	Left       *Param   `(@@ | "*" )`
+	Parameters []*Param `( @@* )`
 }
 
 func (mf *MetricFilter) String() string {
-	if len(mf.Parameters) == 0 {
-		return ""
+	params := []string{
+		mf.Left.String(),
 	}
-
-	params := []string{}
 	for _, v := range mf.Parameters {
 		params = append(params, v.String())
 	}
 
-	return strings.Join(params, ",")
+	return strings.Join(params, "")
 }
 
 type Param struct {
-	GroupedFilter *GroupedFilter `"(" @@ ")"`
-	SimpleFilter  *SimpleFilter  `| @@`
+	GroupedFilter *GroupedFilter        ` "(" @@ ")"`
+	Separator     *FilterValueSeparator `| @@`
+	SimpleFilter  *SimpleFilter         `| @@`
+	Asterisk      bool                  `| @"*"`
 }
 
 func (p *Param) String() string {
+	if p.Separator != nil {
+		return p.Separator.String()
+	}
+
 	if p.GroupedFilter != nil {
 		return p.GroupedFilter.String()
+	}
+
+	if p.Asterisk {
+		return "*"
 	}
 
 	return p.SimpleFilter.String()
@@ -58,7 +67,7 @@ func (sf *SimpleFilter) String() string {
 }
 
 type GroupedFilter struct {
-	Parameters []*Param `( @@ ( ("," | "AND" | "and" | "OR" | "or" ) @@ )* | "*" )?`
+	Parameters []*Param `( @@* | "*" )?`
 }
 
 func (gf *GroupedFilter) String() string {
@@ -67,13 +76,13 @@ func (gf *GroupedFilter) String() string {
 		params = append(params, v.String())
 	}
 
-	return strings.Join(params, ",")
+	return fmt.Sprintf("(%s)", strings.Join(params, ""))
 }
 
 type FilterSeparator struct {
-	Colon bool `@(":" `
-	In    bool `| ("IN" | "in") `
-	NotIn bool `| ("NOT" "IN" | "not" "in") )`
+	Colon bool `@":"`
+	In    bool `| @("IN" | "in") `
+	NotIn bool `| @("NOT" "IN" | "not" "in")`
 }
 
 func (fs *FilterSeparator) String() string {
@@ -103,7 +112,7 @@ func (fk *FilterKey) String() string {
 
 type FilterValue struct {
 	SimpleValue *Value   `	@@`
-	ListValue   []*Value `| ( "(" ( @@ ( "," @@ | "OR" @@ | "or" @@ )* )? ")" )?`
+	ListValue   []*Value `| ( "(" @@* ")" )?`
 }
 
 func (fv *FilterValue) String() string {
@@ -112,20 +121,22 @@ func (fv *FilterValue) String() string {
 		for _, v := range fv.ListValue {
 			strs = append(strs, v.String())
 		}
-		return strings.Join(strs, ",")
+		return fmt.Sprintf("(%s)", strings.Join(strs, ""))
 	}
 
 	return fv.SimpleValue.String()
 }
 
 type Value struct {
-	Boolean    *Bool    `  @("true"|"false")`
-	Identifier *string  `| "!"? @Ident ( @"." @Ident )*`
-	Str        *string  `| @(String)`
-	Number     *float64 `| @(Float|Int)`
+	Separator  *FilterValueSeparator ` @@`
+	Boolean    *Bool                 `|  @("true"|"false")`
+	Identifier *string               `| "!"? @Ident ( @"." @Ident )*`
+	Str        *string               `| @(String)`
+	Number     *float64              `| @(Float|Int)`
 }
 
 func (v *Value) String() string {
+
 	if v.Boolean != nil {
 		return v.Boolean.String()
 	}
@@ -138,5 +149,31 @@ func (v *Value) String() string {
 		return *v.Identifier
 	}
 
+	if v.Separator != nil {
+		return v.Separator.String()
+	}
+
 	return *v.Str
+}
+
+type FilterValueSeparator struct {
+	Comma bool ` @","`
+	And   bool `| @("AND" | "and")`
+	Or    bool `| @("OR" | "or")`
+	In    bool `| @("IN" | "in")`
+}
+
+func (fvs *FilterValueSeparator) String() string {
+	if fvs.Comma {
+		return ", "
+	}
+
+	if fvs.And {
+		return " AND "
+	}
+
+	if fvs.Or {
+		return " OR "
+	}
+	return " IN "
 }

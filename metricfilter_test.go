@@ -5,6 +5,7 @@ import (
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/repr"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,6 +26,24 @@ func Test_MetricMonitorFilter(t *testing.T) {
 		printAST bool // For debugging, can opt in to print AST
 	}{
 		{
+			name:     "test asterisk only",
+			query:    "*",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "test int and string",
+			query:    "code:2xx",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "test one simple filter",
+			query:    "foo:bar-bar",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
 			name:     "test simple comma separated filter",
 			query:    "a:b, c:d",
 			wantErr:  false,
@@ -33,6 +52,12 @@ func Test_MetricMonitorFilter(t *testing.T) {
 		{
 			name:     "test simple AND separated filter",
 			query:    "a:b AND c:d AND e:f",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "test simple OR separated filter",
+			query:    "a:b OR c:d OR e:f",
 			wantErr:  false,
 			printAST: false,
 		},
@@ -73,12 +98,6 @@ func Test_MetricMonitorFilter(t *testing.T) {
 			printAST: false,
 		},
 		{
-			name:     "test lowercase operator suppoer",
-			query:    "a:b and (c:d or e:f) AND g not in (h, i)",
-			wantErr:  false,
-			printAST: false,
-		},
-		{
 			name:     "test example from DataDog docs",
 			query:    "env:shop.ist AND availability-zone IN (us-east-1a, us-east-1b, us-east4-b)",
 			wantErr:  false,
@@ -86,13 +105,7 @@ func Test_MetricMonitorFilter(t *testing.T) {
 		},
 		{
 			name:     "test another example from DataDog docs",
-			query:    "env:prod AND location NOT IN (atlanta,seattle,las-vegas)",
-			wantErr:  false,
-			printAST: false,
-		},
-		{
-			name:     "test int and string",
-			query:    "code:2xx",
+			query:    "env:prod AND location NOT IN (atlanta, seattle, las-vegas)",
 			wantErr:  false,
 			printAST: false,
 		},
@@ -107,6 +120,9 @@ func Test_MetricMonitorFilter(t *testing.T) {
 			if tt.printAST {
 				repr.Println(ast)
 			}
+
+			// Check to make sure we're able to restringify
+			assert.Equal(t, tt.query, ast.String())
 		})
 	}
 }
