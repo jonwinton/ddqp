@@ -23,7 +23,7 @@ type Query struct {
 
 	Aggregator string        `parser:"@Ident ':'"`
 	MetricName string        `parser:"@Ident( @'.' @Ident)*"`
-	Filters    *MetricFilter `parser:"'{' @@ '}'"`
+	Filters    *MetricFilter `"{" @@ "}"`
 	By         string        `parser:"Ident?"`
 	Grouping   []string      `parser:"'{'? ( @Ident ( ',' @Ident )* )? '}'?"`
 	Function   []*Function   `parser:"( @@ ( '.' @@ )* )?"`

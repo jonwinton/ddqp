@@ -10,15 +10,11 @@ import (
 type MetricFilter struct {
 	Pos lexer.Position
 
-	Left       *Param   `@@`
-	Parameters []*Param `( @@* | "*" )`
+	Left       *Param   `(@@ | "*" )`
+	Parameters []*Param `( @@* )`
 }
 
 func (mf *MetricFilter) String() string {
-	// if len(mf.Parameters) == 0 &&  {
-	// 	return
-	// }
-
 	params := []string{
 		mf.Left.String(),
 	}
@@ -71,8 +67,6 @@ func (sf *SimpleFilter) String() string {
 }
 
 type GroupedFilter struct {
-	// Parameters []*Param `( @@ ( ("," | "AND" | "and" | "OR" | "or" ) @@ )* | "*" )?`
-	// Left       *Param   `@@`
 	Parameters []*Param `( @@* | "*" )?`
 }
 

@@ -31,24 +31,24 @@ func Test_MetricQuery(t *testing.T) {
 			wantErr:  true,
 			printAST: false,
 		},
-		// {
-		// 	name:     "filter by asterisk",
-		// 	query:    "sum:namespace.metric.name{ * } by {foo,bar}",
-		// 	wantErr:  false,
-		// 	printAST: false,
-		// },
-		// {
-		// 	name:     "filer by partial asterisk",
-		// 	query:    "sum:namespace.metric.name{foo:bar-*} by {foo,bar}",
-		// 	wantErr:  false,
-		// 	printAST: false,
-		// },
-		// {
-		// 	name:     "test underscores in metric name",
-		// 	query:    "sum:namespace.metric_name{foo:bar} by {baz}",
-		// 	wantErr:  false,
-		// 	printAST: false,
-		// },
+		{
+			name:     "filter by asterisk",
+			query:    "sum:namespace.metric.name{*} by {foo,bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "filer by partial asterisk",
+			query:    "sum:namespace.metric.name{foo:bar-*} by {foo,bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "test underscores in metric name",
+			query:    "sum:namespace.metric_name{foo:bar} by {baz}",
+			wantErr:  false,
+			printAST: false,
+		},
 		{
 			name:     "test hyphens in filters and groupings",
 			query:    "sum:prometheus_metric_source{foo:bar-bar, baz:bang} by {fizz-buzz,bang}",
