@@ -81,9 +81,9 @@ func Test_MetricQuery(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			// if tt.printAST {
-			repr.Println(ast)
-			// }
+			if tt.printAST {
+				repr.Println(ast)
+			}
 
 			// Check to make sure we're able to restringify
 			if !tt.wantErr {
