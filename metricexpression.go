@@ -27,7 +27,7 @@ func (o *Operator) Capture(s []string) error {
 type ExprValue struct {
 	Subexpression *MetricExpression `  "(" @@ ")"`
 	MetricQuery   *MetricQuery      `| @@`
-	Number        *float64          `|  @(Float|Int)`
+	Number        *float64          `| @Ident`
 }
 
 func (expr *ExprValue) GetQueries() []string {
@@ -45,7 +45,7 @@ func (expr *ExprValue) GetQueries() []string {
 		return strs
 	}
 
-	return []string{fmt.Sprintf("%d", expr.Number)}
+	return []string{}
 }
 
 type Factor struct {
