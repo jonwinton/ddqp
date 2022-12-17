@@ -55,6 +55,12 @@ func Test_MetricExpressionCanParse(t *testing.T) {
 			wantErr:  false,
 			printAST: false,
 		},
+		{
+			name:     "filters with slashes",
+			query:    "sum:metric.name{foo:bar/hello} / sum:metric.name_two{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -93,7 +99,7 @@ func Test_MetricExpressionFormula(t *testing.T) {
 			printAST: false,
 		},
 		{
-			name:    "addition formula",
+			name:    "addition and division formula",
 			query:   "(sum:metric.name{foo:bar} + sum:metric.name_two{foo:bar}) / sum:metric.name_three{*}",
 			formula: "(a + b) / c",
 			expressions: map[string]string{
