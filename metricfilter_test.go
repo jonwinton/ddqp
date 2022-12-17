@@ -56,6 +56,12 @@ func Test_MetricMonitorFilter(t *testing.T) {
 			printAST: false,
 		},
 		{
+			name:     "test simple AND NOT separated filter",
+			query:    "a:b AND c:d AND NOT e:f",
+			wantErr:  false,
+			printAST: true,
+		},
+		{
 			name:     "test simple OR separated filter",
 			query:    "a:b OR c:d OR e:f",
 			wantErr:  false,

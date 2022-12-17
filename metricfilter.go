@@ -80,9 +80,10 @@ func (gf *GroupedFilter) String() string {
 }
 
 type FilterSeparator struct {
-	Colon bool `@":"`
-	In    bool `| @("IN" | "in") `
-	NotIn bool `| @("NOT" "IN" | "not" "in")`
+	Colon  bool `@":"`
+	In     bool `| @("IN" | "in") `
+	NotIn  bool `| @("NOT" "IN" | "not" "in")`
+	AndNot bool `| @("AND" "NOT" | "and" "not")`
 }
 
 func (fs *FilterSeparator) String() string {
@@ -92,6 +93,10 @@ func (fs *FilterSeparator) String() string {
 
 	if fs.In {
 		return " IN "
+	}
+
+	if fs.AndNot {
+		return " AND NOT "
 	}
 
 	return " NOT IN "
@@ -157,10 +162,11 @@ func (v *Value) String() string {
 }
 
 type FilterValueSeparator struct {
-	Comma bool ` @","`
-	And   bool `| @("AND" | "and")`
-	Or    bool `| @("OR" | "or")`
-	In    bool `| @("IN" | "in")`
+	Comma  bool ` @","`
+	AndNot bool `| @("AND" "NOT" | "and" "not")`
+	And    bool `| @("AND" | "and")`
+	Or     bool `| @("OR" | "or")`
+	In     bool `| @("IN" | "in")`
 }
 
 func (fvs *FilterValueSeparator) String() string {
@@ -175,5 +181,10 @@ func (fvs *FilterValueSeparator) String() string {
 	if fvs.Or {
 		return " OR "
 	}
+
+	if fvs.AndNot {
+		return " AND NOT "
+	}
+
 	return " IN "
 }
