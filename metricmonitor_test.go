@@ -45,6 +45,10 @@ func Test_MetricMonitor(t *testing.T) {
 			if tt.printAST {
 				repr.Println(ast)
 			}
+
+			// test re-stringification
+			restring := ast.String()
+			require.Equal(t, tt.query, restring)
 		})
 	}
 }
