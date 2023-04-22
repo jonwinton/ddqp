@@ -1,6 +1,7 @@
 package ddqp
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/alecthomas/participle/v2"
@@ -15,6 +16,11 @@ type MetricMonitor struct {
 	MetricQuery      *MetricQuery `@@`
 	Comparator       string       `@( ">" | ">" "=" | "<" | "<" "=" )`
 	Threshold        float64      `@(Ident)`
+}
+
+// String returns the string representation of the metric monitor.
+func (mm *MetricMonitor) String() string {
+	return fmt.Sprintf("%s(%s):%s %s %g", mm.Aggregation, mm.EvaluationWindow, mm.MetricQuery.String(), mm.Comparator, mm.Threshold)
 }
 
 // NewMetricMonitorParser returns a Parser which is capable of interpretting
