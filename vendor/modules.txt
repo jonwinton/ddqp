@@ -2,7 +2,7 @@
 ## explicit; go 1.18
 github.com/alecthomas/participle/v2
 github.com/alecthomas/participle/v2/lexer
-# github.com/alecthomas/repr v0.2.0
+# github.com/alecthomas/repr v0.4.0
 ## explicit; go 1.18
 github.com/alecthomas/repr
 # github.com/davecgh/go-spew v1.1.1
