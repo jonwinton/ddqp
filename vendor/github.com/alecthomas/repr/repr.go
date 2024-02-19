@@ -71,13 +71,20 @@ func ExplicitTypes(ok bool) Option { return func(o *Printer) { o.explicitTypes =
 // IgnoreGoStringer disables use of the .GoString() method.
 func IgnoreGoStringer() Option { return func(o *Printer) { o.ignoreGoStringer = true } }
 
-// Hide excludes the given types from representation, instead just printing the name of the type.
-func Hide(ts ...any) Option {
+// IgnorePrivate disables private field members from output.
+func IgnorePrivate() Option { return func(o *Printer) { o.ignorePrivate = true } }
+
+// ScalarLiterals forces the use of literals for scalars, rather than a string representation if available.
+//
+// For example, `time.Hour` will be printed as `time.Duration(3600000000000)` rather than `time.Duration(1h0m0s)`.
+func ScalarLiterals() Option { return func(o *Printer) { o.useLiterals = true } }
+
+// Hide excludes fields of the given type from representation.
+func Hide[T any]() Option {
 	return func(o *Printer) {
-		for _, t := range ts {
-			rt := reflect.Indirect(reflect.ValueOf(t)).Type()
-			o.exclude[rt] = true
-		}
+		t := (*T)(nil) // A bit of skulduggery so we can Hide() interfaces.
+		rt := reflect.TypeOf(t).Elem()
+		o.exclude[rt] = true
 	}
 }
 
@@ -89,10 +96,12 @@ type Printer struct {
 	indent            string
 	omitEmpty         bool
 	ignoreGoStringer  bool
+	ignorePrivate     bool
 	alwaysIncludeType bool
 	explicitTypes     bool
 	exclude           map[reflect.Type]bool
 	w                 io.Writer
+	useLiterals       bool
 }
 
 // New creates a new Printer on w with the given Options.
@@ -157,10 +166,6 @@ func (p *Printer) reprValue(seen map[reflect.Value]bool, v reflect.Value, indent
 		fmt.Fprint(p.w, "nil")
 		return
 	}
-	if p.exclude[v.Type()] {
-		fmt.Fprintf(p.w, "%s...", v.Type().Name())
-		return
-	}
 	t := v.Type()
 
 	if t == byteSliceType {
@@ -176,7 +181,7 @@ func (p *Printer) reprValue(seen map[reflect.Value]bool, v reflect.Value, indent
 		}
 	}
 	// Attempt to use fmt.GoStringer interface.
-	if !p.ignoreGoStringer && t.Implements(goStringerType) {
+	if !p.ignoreGoStringer && t.Implements(goStringerType) && v.CanInterface() {
 		fmt.Fprint(p.w, v.Interface().(fmt.GoStringer).GoString())
 		return
 	}
@@ -244,18 +249,56 @@ func (p *Printer) reprValue(seen map[reflect.Value]bool, v reflect.Value, indent
 			if p.indent != "" && v.NumField() != 0 {
 				fmt.Fprintf(p.w, "\n")
 			}
+			previous := false
 			for i := 0; i < v.NumField(); i++ {
 				t := v.Type().Field(i)
-				f := v.Field(i)
-				if p.omitEmpty && f.IsZero() {
+				if p.exclude[t.Type] {
 					continue
 				}
+				f := v.Field(i)
+				ft := f.Type()
+				// skip private fields
+				if p.ignorePrivate && !f.CanInterface() {
+					continue
+				}
+				if p.omitEmpty && (f.IsZero() ||
+					ft.Kind() == reflect.Slice && f.Len() == 0 ||
+					ft.Kind() == reflect.Map && f.Len() == 0) {
+					continue
+				}
+				if previous && p.indent == "" {
+					fmt.Fprintf(p.w, ", ")
+				}
+				previous = true
 				fmt.Fprintf(p.w, "%s%s: ", ni, t.Name)
 				p.reprValue(seen, f, ni, true, t.Type == anyType)
+
+				// if private fields should be ignored, look up if a public
+				// field need to be displayed and breaks at the first public
+				// field found preventing from looping over all remaining
+				// fields.
+				//
+				// If no other field need to be displayed, continue and do
+				// not print a comma.
+				//
+				// This prevents from having a trailing comma if a private
+				// field ends a structure.
+				if p.ignorePrivate {
+					nc := false
+					for j := i + 1; j < v.NumField(); j++ {
+						if v.Field(j).CanInterface() {
+							nc = true
+							// exit for j loop
+							break
+						}
+					}
+					// Skip comma display if no remaining public field found.
+					if !nc {
+						continue
+					}
+				}
 				if p.indent != "" {
 					fmt.Fprintf(p.w, ",\n")
-				} else if i < v.NumField()-1 {
-					fmt.Fprintf(p.w, ", ")
 				}
 			}
 			fmt.Fprintf(p.w, "%s}", indent)
@@ -288,10 +331,14 @@ func (p *Printer) reprValue(seen map[reflect.Value]bool, v reflect.Value, indent
 		fmt.Fprint(p.w, substAny(v.Type()))
 
 	default:
+		value := fmt.Sprintf("%v", v)
+		if p.useLiterals {
+			value = fmt.Sprintf("%#v", v)
+		}
 		if t.Name() != realKindName[t.Kind()] || p.alwaysIncludeType || isAnyValue {
-			fmt.Fprintf(p.w, "%s(%v)", t, v)
+			fmt.Fprintf(p.w, "%s(%s)", t, value)
 		} else {
-			fmt.Fprintf(p.w, "%v", v)
+			fmt.Fprintf(p.w, "%s", value)
 		}
 	}
 }
