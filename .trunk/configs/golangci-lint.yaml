@@ -1,0 +1,11 @@
+linters-settings:
+  depguard:
+    rules:
+      Main:
+        allow:
+          - $gostd
+          - github.com/jonwinton/ddqp
+          - github.com/alecthomas/participle/v2
+          - github.com/alecthomas/participle/v2/lexer
+          - github.com/alecthomas/repr
+          - github.com/stretchr/testify

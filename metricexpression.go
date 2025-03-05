@@ -93,14 +93,27 @@ func (me *MetricExpression) GetQueries() map[string]string {
 
 	for _, v := range me.Right {
 		rightQueries := v.Term.GetQueries()
-
 		queries = append(queries, rightQueries...)
 	}
 
+	// Create a map to store unique queries in order of appearance
 	queryMap := make(map[string]string)
-	for key, value := range queries {
-		queryMap[toCharStr(key+1)] = value
+	seen := make(map[string]bool)
+	orderedQueries := make([]string, 0)
+
+	// First pass: collect unique queries in order
+	for _, query := range queries {
+		if !seen[query] {
+			seen[query] = true
+			orderedQueries = append(orderedQueries, query)
+		}
 	}
+
+	// Second pass: assign variables in order
+	for i, query := range orderedQueries {
+		queryMap[toCharStr(i+1)] = query
+	}
+
 	return queryMap
 }
 

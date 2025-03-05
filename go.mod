@@ -1,6 +1,6 @@
 module github.com/jonwinton/ddqp
 
-go 1.19
+go 1.24
 
 require (
 	github.com/alecthomas/participle/v2 v2.0.0

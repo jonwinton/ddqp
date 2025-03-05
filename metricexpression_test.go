@@ -139,8 +139,8 @@ func Test_MetricExpressionFormula(t *testing.T) {
 			}
 
 			expr := NewMetricExpressionFormula(ast)
-			assert.Equal(t, expr.Formula, tt.formula)
-			assert.Equal(t, expr.Expressions, tt.expressions)
+			assert.Equal(t, tt.formula, expr.Formula)
+			assert.Equal(t, tt.expressions, expr.Expressions)
 		})
 	}
 }

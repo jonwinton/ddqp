@@ -7,6 +7,7 @@ output:
   print-issued-lines: false
 
 linters:
+  fast: true
   enable-all: true
   disable:
     - maligned
