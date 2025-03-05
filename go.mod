@@ -1,11 +1,11 @@
-module github.com/jonwinton/ddqp
+module github.com/Sawmills/ddqp
 
 go 1.24
 
 require (
-	github.com/alecthomas/participle/v2 v2.0.0
-	github.com/alecthomas/repr v0.2.0
-	github.com/stretchr/testify v1.8.4
+	github.com/alecthomas/participle/v2 v2.1.1
+	github.com/alecthomas/repr v0.4.0
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
