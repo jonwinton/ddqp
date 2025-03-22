@@ -35,11 +35,7 @@
 
 ## V2
 
-This is a beta version of version 2 of Participle. It is still subject to change but should be mostly stable at this point.
-
-See the [Change Log](CHANGES.md) for details.
-
-> **Note:** semantic versioning API guarantees do not apply to the [experimental](https://pkg.go.dev/github.com/alecthomas/participle/v2/experimental) packages - the API may break between minor point releases.
+This is version 2 of Participle.
 
 It can be installed with:
 
@@ -357,7 +353,7 @@ to always return to the previous state.
 As a special case, regexes containing backrefs in the form `\N` (where `N` is
 a digit) will match the corresponding capture group from the immediate parent
 group. This can be used to parse, among other things, heredocs. See the
-[tests](https://github.com/alecthomas/participle/blob/master/lexer/stateful/stateful_test.go#L59)
+[tests](https://github.com/alecthomas/participle/blob/master/lexer/stateful_test.go#L59)
 for an example of this, among others.
 
 ### Example stateful lexer
@@ -399,7 +395,7 @@ own _stateless_ lexer using the `lexer.MustSimple()` and
 For example, the lexer for a form of BASIC:
 
 ```go
-var basicLexer = stateful.MustSimple([]stateful.SimpleRule{
+var basicLexer = lexer.MustSimple([]lexer.SimpleRule{
     {"Comment", `(?i)rem[^\n]*`},
     {"String", `"(\\"|[^"])*"`},
     {"Number", `[-+]?(\d*\.)?\d+`},
@@ -530,12 +526,12 @@ type Value struct {
 }
 
 var (
-	graphQLLexer = lexer.MustSimple([]lexer.Rule{
-		{"Comment", `(?:#|//)[^\n]*\n?`, nil},
-		{"Ident", `[a-zA-Z]\w*`, nil},
-		{"Number", `(?:\d*\.)?\d+`, nil},
-		{"Punct", `[-[!@#$%^&*()+_={}\|:;"'<,>.?/]|]`, nil},
-		{"Whitespace", `[ \t\n\r]+`, nil},
+	graphQLLexer = lexer.MustSimple([]lexer.SimpleRule{
+		{"Comment", `(?:#|//)[^\n]*\n?`},
+		{"Ident", `[a-zA-Z]\w*`},
+		{"Number", `(?:\d*\.)?\d+`},
+		{"Punct", `[-[!@#$%^&*()+_={}\|:;"'<,>.?/]|]`},
+		{"Whitespace", `[ \t\n\r]+`},
 	})
 	parser = participle.MustBuild[File](
 		participle.Lexer(graphQLLexer),
@@ -600,7 +596,7 @@ There are a few areas where Participle can provide useful feedback to users of y
    populated from the nearest matching token.
 4. Any node in the AST containing a field `EndPos lexer.Position` [^1] will be
    automatically populated from the token at the end of the node.
-5. Any node in the AST containing a field `Tokens []lexer.Token` [^1] will be automatically
+5. Any node in the AST containing a field `Tokens []lexer.Token` will be automatically
    populated with _all_ tokens captured by the node, _including_ elided tokens.
 
 [^1]: Either the concrete type or a type convertible to it, allowing user defined types to be used.
@@ -665,7 +661,7 @@ Enum = "enum" ident "{" ident* "}" .
 
 ## Syntax/Railroad Diagrams
 
-Participle includes a [command-line utility]() to take an EBNF representation of a Participle grammar
+Participle includes a [command-line utility](https://github.com/alecthomas/participle/tree/master/cmd/railroad) to take an EBNF representation of a Participle grammar
 (as returned by `Parser.String()`) and produce a Railroad Diagram using
 [tabatkins/railroad-diagrams](https://github.com/tabatkins/railroad-diagrams).
 
