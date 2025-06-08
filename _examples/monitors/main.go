@@ -17,7 +17,7 @@ func main() {
 
 	// Example 1: Basic monitor query
 	fmt.Println("=== Example 1: Basic Monitor Query ===")
-	monitorQuery := `avg(last_5m):system.cpu.user{env:prod} > 80`
+	monitorQuery := `avg(last_5m):avg:system.cpu.user{env:prod} > 80`
 	
 	monitor, err := parser.Parse(monitorQuery)
 	if err != nil {
@@ -36,15 +36,15 @@ func main() {
 	fmt.Println("\n=== Example 2: Different Monitor Types ===")
 	
 	// Min monitor
-	minMonitor := `min(last_10m):system.cpu.idle{env:production} < 10`
+	minMonitor := `min(last_10m):min:system.cpu.idle{env:production} < 10`
 	minParsed, _ := parser.Parse(minMonitor)
 	
 	// Max monitor
-	maxMonitor := `max(last_30m):system.memory.used{service:database} > 90`
+	maxMonitor := `max(last_30m):max:system.memory.used{service:database} > 90`
 	maxParsed, _ := parser.Parse(maxMonitor)
 	
 	// Sum monitor
-	sumMonitor := `sum(last_1h):system.io.await{service:api} >= 100`
+	sumMonitor := `sum(last_1h):sum:system.io.await{service:api} >= 100`
 	sumParsed, _ := parser.Parse(sumMonitor)
 
 	fmt.Printf("Min Monitor: %s\n    -> %s\n", minMonitor, minParsed.String())
@@ -53,7 +53,7 @@ func main() {
 
 	// Example 3: Monitor with complex filter
 	fmt.Println("\n=== Example 3: Monitor with Complex Filter ===")
-	complexMonitor := `avg(last_15m):network.tcp.retransmit{env:prod AND (region:us-east OR region:us-west)} > 50`
+	complexMonitor := `avg(last_15m):avg:network.tcp.retransmit{env:prod AND (region:us-east OR region:us-west)} > 50`
 	
 	complexParsed, err := parser.Parse(complexMonitor)
 	if err != nil {
@@ -65,7 +65,7 @@ func main() {
 
 	// Example 4: Monitor with grouping
 	fmt.Println("\n=== Example 4: Monitor with Grouping ===")
-	groupingMonitor := `min(last_5m):system.load.1{env:production} by {host,availability-zone,cluster} > 4`
+	groupingMonitor := `min(last_5m):min:system.load.1{env:production} by {host,availability-zone,cluster} > 4`
 	
 	groupingParsed, err := parser.Parse(groupingMonitor)
 	if err != nil {
