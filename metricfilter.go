@@ -95,23 +95,23 @@ func (fs *FilterSeparator) String() string {
 	if fs.Colon {
 		return ":"
 	}
-	
+
 	if fs.GreaterThan {
 		return ":>"
 	}
-	
+
 	if fs.LessThan {
 		return ":<"
 	}
-	
+
 	if fs.GreaterEqual {
 		return ":>="
 	}
-	
+
 	if fs.LessEqual {
 		return ":<="
 	}
-	
+
 	if fs.Regex {
 		return ":~"
 	}

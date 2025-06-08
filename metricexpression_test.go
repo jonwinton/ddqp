@@ -125,12 +125,12 @@ func Test_MetricExpressionFormula(t *testing.T) {
 	parser := newMetricExpressionParser()
 
 	tests := []struct {
-		name        string
-		query       string
-		formula     string          // Expected formula or empty if we don't care about exact mapping
-		expressions map[string]string
-		wantErr     bool
-		printAST    bool // For debugging, can opt in to print AST
+		name             string
+		query            string
+		formula          string // Expected formula or empty if we don't care about exact mapping
+		expressions      map[string]string
+		wantErr          bool
+		printAST         bool // For debugging, can opt in to print AST
 		skipFormulaCheck bool // Skip formula assertion for cases where map ordering matters
 	}{
 		{
@@ -153,8 +153,8 @@ func Test_MetricExpressionFormula(t *testing.T) {
 				"b": "sum:metric.name_two{foo:bar}",
 				"c": "sum:metric.name_three{*}",
 			},
-			wantErr:  false,
-			printAST: false,
+			wantErr:          false,
+			printAST:         false,
 			skipFormulaCheck: true,
 		},
 		{
@@ -165,8 +165,8 @@ func Test_MetricExpressionFormula(t *testing.T) {
 				"a": "sum:metric.name{foo:bar}",
 				"b": "sum:metric.name_two{foo:bar}",
 			},
-			wantErr:  false,
-			printAST: true,
+			wantErr:          false,
+			printAST:         true,
 			skipFormulaCheck: true,
 		},
 	}
@@ -205,7 +205,7 @@ func Test_MetricExpressionFormula(t *testing.T) {
 				t.Logf("Expected expressions: %v\nActual expressions: %v", tt.expressions, expr.Expressions)
 			}
 			assert.True(t, expressionsEqual, "Expressions maps should contain the same values (might have different keys)")
-			
+
 		})
 	}
 }
