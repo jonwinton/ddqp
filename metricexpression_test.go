@@ -205,7 +205,6 @@ func Test_MetricExpressionFormula(t *testing.T) {
 				t.Logf("Expected expressions: %v\nActual expressions: %v", tt.expressions, expr.Expressions)
 			}
 			assert.True(t, expressionsEqual, "Expressions maps should contain the same values (might have different keys)")
-
 		})
 	}
 }
