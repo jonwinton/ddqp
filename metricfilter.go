@@ -80,15 +80,40 @@ func (gf *GroupedFilter) String() string {
 }
 
 type FilterSeparator struct {
-	Colon  bool `@":"`
-	In     bool `| @("IN" | "in") `
-	NotIn  bool `| @("NOT" "IN" | "not" "in")`
-	AndNot bool `| @("AND" "NOT" | "and" "not")`
+	Colon        bool `@":"`
+	GreaterThan  bool `| @":>"`
+	LessThan     bool `| @":<"`
+	GreaterEqual bool `| @":>="`
+	LessEqual    bool `| @":<="`
+	Regex        bool `| @":~"`
+	In           bool `| @("IN" | "in") `
+	NotIn        bool `| @("NOT" "IN" | "not" "in")`
+	AndNot       bool `| @("AND" "NOT" | "and" "not")`
 }
 
 func (fs *FilterSeparator) String() string {
 	if fs.Colon {
 		return ":"
+	}
+
+	if fs.GreaterThan {
+		return ":>"
+	}
+
+	if fs.LessThan {
+		return ":<"
+	}
+
+	if fs.GreaterEqual {
+		return ":>="
+	}
+
+	if fs.LessEqual {
+		return ":<="
+	}
+
+	if fs.Regex {
+		return ":~"
 	}
 
 	if fs.In {
@@ -116,7 +141,7 @@ func (fk *FilterKey) String() string {
 }
 
 type FilterValue struct {
-	SimpleValue *Value   `	@@`
+	SimpleValue *Value   `@@`
 	ListValue   []*Value `| ( "(" @@* ")" )?`
 }
 
