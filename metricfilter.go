@@ -166,7 +166,6 @@ type Value struct {
 }
 
 func (v *Value) String() string {
-
 	if v.Boolean != nil {
 		return v.Boolean.String()
 	}

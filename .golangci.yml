@@ -17,9 +17,10 @@ linters:
     - govet
 
 formatters:
-  disable:
-    - gci
+  enable:
+    - gofmt
     - gofumpt
+    - goimports
 
 linters-settings:
   govet:
