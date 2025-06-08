@@ -1,11 +1,7 @@
 version: "2"
+
 run:
   tests: true
-  skip-dirs:
-    - _examples
-
-output:
-  print-issued-lines: false
 
 linters:
   disable-all: true
@@ -21,61 +17,13 @@ formatters:
     - gofmt
     - gofumpt
     - goimports
+    - gci
 
 linters-settings:
-  govet:
-    check-shadowing: true
-    disable-all: true
-    enable:
-      - asmdecl
-      - assign
-      - atomic
-      - bools
-      - buildtag
-      - cgocall
-      - composites
-      - copylocks
-      - errorsas
-      - framepointer
-      - httpresponse
-      - ifaceassert
-      - loopclosure
-      - lostcancel
-      - nilfunc
-      - printf
-      - shift
-      - sigchanyzer
-      - slog
-      - sortslice
-      - stdmethods
-      - stringintconv
-      - timeformat
-      - unmarshal
-      - unreachable
-      - unsafeptr
-      - unusedresult
-  gocyclo:
-    min-complexity: 10
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 8
-    min-occurrences: 3
   exhaustive:
     default-signifies-exhaustive: true
 
 issues:
-  max-per-linter: 0
-  max-same: 0
-  exclude-use-default: false
   exclude:
-    # Captured by errcheck.
-    - '^(G104|G204|G307):'
-    # Very commonly not checked.
-    - 'Error return value of .(.*\.Help|.*\.MarkFlagRequired|(os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked'
-    - 'exported method `(.*\.MarshalJSON|.*\.UnmarshalJSON|.*\.EntityURN|.*\.GoString|.*\.Pos)` should have comment or be unexported'
-    - 'composite literal uses unkeyed fields'
-    - 'declaration of "err" shadows declaration'
-    - 'bad syntax for struct tag key'
-    - 'bad syntax for struct tag pair'
-    - '^ST1012'
+    - "bad syntax for struct tag key"
+    - "bad syntax for struct tag pair"
