@@ -64,7 +64,7 @@ func main() {
 
 	// Example 3: Using regex filters
 	fmt.Println("\n=== Example 3: Regex Filters ===")
-	regexQuery := `sum:http.requests{path:~^/api/v[0-9]/users}`
+	regexQuery := `sum:http.requests{path:~simple-pattern}`
 	regexParsed, err := parser.Parse(regexQuery)
 	if err != nil {
 		panic(err)

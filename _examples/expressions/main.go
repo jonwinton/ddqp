@@ -20,28 +20,28 @@ func main() {
 	
 	// Addition
 	addExpr := `sum:system.cpu.user{*} + sum:system.cpu.system{*}`
-	addParsed, err := parser.Parse(addExpr)
+	_, err := parser.Parse(addExpr)
 	if err != nil {
 		panic(err)
 	}
 	
 	// Subtraction
 	subExpr := `sum:system.cpu.user{*} - sum:system.cpu.idle{*}`
-	subParsed, err := parser.Parse(subExpr)
+	_, err = parser.Parse(subExpr)
 	if err != nil {
 		panic(err)
 	}
 	
 	// Multiplication
 	mulExpr := `sum:system.memory.used{*} * 100`
-	mulParsed, err := parser.Parse(mulExpr)
+	_, err = parser.Parse(mulExpr)
 	if err != nil {
 		panic(err)
 	}
 	
 	// Division
 	divExpr := `sum:system.network.bytes_sent{*} / 1024`
-	divParsed, err := parser.Parse(divExpr)
+	_, err = parser.Parse(divExpr)
 	if err != nil {
 		panic(err)
 	}

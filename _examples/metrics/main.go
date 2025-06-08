@@ -29,7 +29,8 @@ func main() {
 	fmt.Printf("Metric Name: %s\n", parsed.Query[0].MetricName)
 	fmt.Printf("Filter String: %s\n", parsed.Query[0].Filters.String())
 	fmt.Printf("Filter Key: %s\n", parsed.Query[0].Filters.Left.SimpleFilter.FilterKey)
-	fmt.Printf("Filter Value: %s\n", parsed.Query[0].Filters.Left.SimpleFilter.FilterValue.SimpleValue.Identifier)
+	identifier := parsed.Query[0].Filters.Left.SimpleFilter.FilterValue.SimpleValue.Identifier
+	fmt.Printf("Filter Value: %s\n", *identifier)
 	fmt.Printf("Grouping: %v\n", parsed.Query[0].Grouping)
 
 	// Example 2: Working with complex filters
