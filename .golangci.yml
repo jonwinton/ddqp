@@ -1,3 +1,4 @@
+version: "2"
 run:
   tests: true
   skip-dirs:
@@ -7,54 +8,51 @@ output:
   print-issued-lines: false
 
 linters:
-  enable-all: true
+  disable-all: true
+  enable:
+    - errcheck
+    - ineffassign
+    - staticcheck
   disable:
-    - maligned
-    - lll
-    - gocyclo
-    - gochecknoglobals
-    - wsl
-    - whitespace
-    - godox
-    - funlen
-    - gocognit
-    - gomnd
-    - goerr113
-    - godot
-    - nestif
-    - testpackage
-    - nolintlint
-    - exhaustivestruct
-    - wrapcheck
+    - govet
+
+formatters:
+  disable:
     - gci
     - gofumpt
-    - gocritic
-    - nlreturn
-    - errorlint
-    - nakedret
-    - forbidigo
-    - revive
-    - cyclop
-    - ifshort
-    - paralleltest
-    - interfacer
-    - scopelint
-    - golint
-    - wastedassign
-    - forcetypeassert
-    - gomoddirectives
-    - varnamelen
-    - exhaustruct
-    - ireturn
-    - nonamedreturns
-    - errname
-    - nilnil
-    - maintidx
-    - unused # Does not work with type parameters
 
 linters-settings:
   govet:
     check-shadowing: true
+    disable-all: true
+    enable:
+      - asmdecl
+      - assign
+      - atomic
+      - bools
+      - buildtag
+      - cgocall
+      - composites
+      - copylocks
+      - errorsas
+      - framepointer
+      - httpresponse
+      - ifaceassert
+      - loopclosure
+      - lostcancel
+      - nilfunc
+      - printf
+      - shift
+      - sigchanyzer
+      - slog
+      - sortslice
+      - stdmethods
+      - stringintconv
+      - timeformat
+      - unmarshal
+      - unreachable
+      - unsafeptr
+      - unusedresult
   gocyclo:
     min-complexity: 10
   dupl:
