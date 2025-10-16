@@ -1,0 +1,149 @@
+## Lines starting with # are comments and will be ignored
+# Basic query with grouping
+sum:generic.ns.metric.total{env:dev,service:svc-a} by {service}
+
+# Docs-like example (genericized)
+avg:system.cpu.user{env:dev AND (az:region-1a OR az:region-1c)} by {az}
+
+# Space aggregation conditions
+count(v: v<=1):metric.name{foo:bar}
+count(v: v<10):metric.name{*}
+
+# Functions
+sum:system.cpu.user{*}.as_rate()
+sum:system.cpu.user{*}.rollup(avg,60)
+sum:system.cpu.user{*}.label("CPU User")
+sum:system.cpu.user{*}.fill(true)
+
+# Function chaining
+sum:system.cpu.user{*}.as_rate().rollup(avg,60).label("CPU User").fill(true)
+
+# Filters
+sum:metric.name{!env:prod, region:region-1}
+sum:metric.name{host:~"web-.*"}
+sum:metric.name{duration:>=100 AND duration:<=200 OR errors:>5}
+sum:metric.name{env IN (prod, staging)}
+sum:metric.name{region NOT IN (region-1, region-2)}
+sum:metric.name{(service:api AND NOT env:dev) OR region IN (region-1, region-2)}
+
+# Wildcard/slash metric, grouping, and functions
+sum:system.disk/*{*} by {host}.as_rate().rollup(avg,300)
+
+# Wrapping functions and arithmetic
+default_zero(avg:metric.alpha{team:core} + avg:metric.beta{team:core})
+default_zero(avg:metric.alpha{team:core}) + avg:metric.beta{team:core}
+
+# Moving rollup + default_zero (generic services)
+moving_rollup(default_zero(sum:app.http.requests{service:svc-a,!grpc_service:statushandler,env:dev}.as_rate()),60,'avg')
+moving_rollup(default_zero(sum:app.http.requests{service:svc-b,!grpc_service:statushandler,env:test}.as_rate()),60,'avg')
+moving_rollup(default_zero(sum:app.http.response_codes{app:svc-c,!grpc_service:statushandler,env:dev,code:s}.as_rate()),60,'avg')
+
+# Rate divided by replicas
+sum:app.http.responses{env:dev, region:region-2, deployment:api}.as_rate() / sum:container.hpa.current_replicas{env:dev, region:region-2, hpa:api}
+
+# Queue size examples
+default_zero(sum:queue.size{env:dev,service:svc-d}.rollup(max))
+
+# Envoy/http-like metrics (genericized)
+sum:http.downstream_rq_total{app:web,env:dev,listener:ingress,host:api--svc-a-*}.as_rate()
+sum:http.downstream_rq_total{app:web,env:test,listener:ingress,host:test--svc-b-*}.as_rate()
+
+# Default zero with label combinations
+default_zero(sum:auth.validate.response_codes{ service:auth,env:dev,deployment:auth,region:region-2 }.as_rate())
+
+# Request rate moving rollups
+moving_rollup(sum:http.downstream_rq_completed{env:dev,region:region-2,service:svc-e,deployment:svc-e-go}.as_rate(), 300, 'max')
+max:svc_e.profile_service.traits_request_gauge{env:dev, region:region-2, service:svc-e, deployment:svc-e-go}
+
+# Jobqueue examples (genericized)
+avg:jobqueue.queue_latency{service:svc-f,queue:default,cluster:cluster-dev}
+max:jobqueue.queue_size{service:svc-f,queue:trigger,cluster:cluster-dev}
+
+# Timeshift examples
+default_zero(timeshift(sum:trace.server.hits{env:dev,service:gateway}.as_rate(), -15))
+
+# Regex and wildcards retained
+sum:metric.name{rpc:*}.as_rate()
+
+# Rollups over histograms (generic)
+default_zero(max:service.api.response_times.histogram{service:svc-g AND env:dev AND region:region-2 AND distribution:95percentile AND ((api:list_items AND grpc_service:*))})
+
+# PHP-FPM like metric (generic)
+avg:php.fpm.processes.active{service:svc-g,env:dev}
+
+# Error/complete rates (generic)
+default_zero(sum:http.downstream_rq_5xx{env:dev,region:region-2,service:svc-g*} by {service}.as_rate())
+default_zero(sum:http.downstream_rq_completed{env:dev,region:region-2,service:svc-g*}.as_rate())
+
+# Top with moving rollup and CPU usage
+ top(moving_rollup(max:kubernetes.cpu.usage.total{service:svc-h, !deployment:svc-h-sandbox, region:region-2, env:dev} by {container} / max:kubernetes.cpu.limits{service:svc-h, !deployment:svc-h-sandbox, region:region-2, env:dev} by {container} / (1000 * 1000 * 10), 300, 'max'), 1, 'max', 'desc')
+
+# Response codes (generic)
+default_zero(sum:service.http.response_codes{env:dev, service:svc-i, region:region-2}.as_rate())
+
+# IN list and NOT IN list already covered above
+
+# GCP Pub/Sub style metrics (generic)
+sum:gcp.pubsub.subscription.num_undelivered_messages{project_id:project-dev,subscription_id:sub-a}.fill(last)
+
+# Consumer commit counts (generic)
+sum:consumer.commit.num_records{*}.as_rate()
+piecewise_constant(moving_rollup(sum:consumer.commit.num_records{consumer_name:consumer-a,env:dev,region:region-2,topic:*audit_trail}.as_rate(), 600, 'avg'))
+
+# Moving rollup with default_zero (generic topic)
+moving_rollup(default_zero(sum:consumer.commit.num_records{consumer_name:consumer-b,env:dev,region:region-2,topic:*load_test_topic_*}), 600, 'max')
+
+# Timeshift on upstream requests (generic)
+timeshift(sum:http.upstream_rq_total{env:dev,service:svc-j,region:region-2}.as_rate(), -85500)
+timeshift(sum:http.upstream_rq_total{env:test,service:svc-j}.rollup(sum, 60), -84200)
+
+# More moving rollups
+moving_rollup(sum:http.downstream_rq_total{listener:ingress,service:svc-k,env:dev,region:region-2}.as_rate(),120,'avg')
+
+# Lag metrics (genericized)
+max:consumer.records_lag_max{service:svc-l AND consumer_name IN (consumer-x) AND (env:dev)} by {env,consumer_name}
+max:client_metrics.consumer_timestamp_lag_max.max{service:svc-l AND consumer_name IN (consumer-x) AND (env:dev)} by {env,consumer_name}.fill(zero)
+
+# Kubernetes pod phase (generic)
+sum:kubernetes_state.pod.status_phase{nodepool:standard*,pod_phase:pending,cluster:cluster-dev,!namespace:overprovisioning,!namespace:kuberhealthy,!pod_name:sync-*, deployment:* }
+
+# AWS SQS approximations (generic)
+sum:aws.sqs.approximate_number_of_messages_visible{queuename:queue-a,env:dev,region:region-2}.as_count()
+max:aws.sqs.approximate_age_of_oldest_message{queuename:queue-a}.timeshift(-900)
+
+# Misc examples retained generically
+avg:requests_per_sec{*}.rollup(30)
+
+default_zero(avg:jobqueue.queue_size{env:dev,service:svc-m}.as_count())
+
+# default_zero(sum:service.clients.response_codes{aws_default_region:region-2 AND env:dev AND service:svc-n AND NOT grpc_service:statushandler AND code NOT IN (2*, 4*, 5*)} by {aws_default_region,env,service}.as_rate()).fill(zero)
+
+# NOT messages system (generic) repeated once intentionally
+http.downstream_rq_total{app:notifier,env:dev,listener:ingress,host:notifier-*}.as_rate()
+
+# Observability-like metric
+default_zero(avg:http.downstream_rq_total{service:observability,listener:ingress,region:region-2,env:dev}.as_rate().rollup(avg, 60))
+
+# Labeled streaming connections using fill with params
+sum:relay.streaming_connections{env:dev, region:region-2} by {*}.fill(last, 30)
+
+# Demo/random rates (generic)
+default_zero(sum:demo.random_endpoint_200{cluster:cluster-dev}.as_rate())
+
+# Weighted example (generic)
+default_zero(sum:jobqueue.queue_size{cluster:cluster-dev , service:svc-o}.weighted())
+
+# Top with different service
+ top(moving_rollup(max:kubernetes.cpu.usage.total{service:svc-p, region:region-2, env:dev, container:worker} / max:kubernetes.cpu.limits{service:svc-p, region:region-2, env:dev, container:worker} / (1000000 * 10), 30, 'max'), 1, 'max', 'desc')
+
+# Division by replicas again (generic)
+sum:http.upstream_rq_total{env:dev,region:region-2,upstream_app:webhooks,!upstream_cluster_type:local_app*}.as_rate() / sum:container.hpa.current_replicas{env:dev, region:region-2, hpa:webhooks }
+
+# EWMA example
+ewma_20(sum:processor.events.consumed{env:dev}.as_rate())
+
+# Timeshifted rates (generic)
+max:pubsub.subscription.oldest_unacked_message_age{subscription:generic-sub, project:project-dev}.timeshift(-900)
+
+# Final moving rollups
+moving_rollup(avg:trace.request.hits{env:dev,region:region-2,service:svc-q}.as_count(), 3600, 'max')

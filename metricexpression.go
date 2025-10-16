@@ -25,9 +25,10 @@ func (o *Operator) Capture(s []string) error {
 }
 
 type ExprValue struct {
-	Subexpression *MetricExpression `  "(" @@ ")"`
-	MetricQuery   *MetricQuery      `| @@`
-	Number        *float64          `| @Ident`
+	Subexpression         *MetricExpression            `  "(" @@ ")"`
+	ExprAggregatorFuction *ExpressionAggregatorFuction `| @@`
+	MetricQuery           *MetricQuery                 `| @@`
+	Number                *float64                     `| @Ident`
 }
 
 func (expr *ExprValue) GetQueries() []string {
@@ -84,14 +85,28 @@ type OpTerm struct {
 type MetricExpression struct {
 	Pos lexer.Position
 
+	GroupedExpression *GroupedExpression `parser:"@@"`
+}
+
+type ExpressionAggregatorFuction struct {
+	Pos lexer.Position
+
+	Name string             `parser:"@Ident '('"`
+	Body *GroupedExpression `parser:"@@"`
+	Args []*Value           `parser:"( ',' @@ )* ')'"`
+}
+
+type GroupedExpression struct {
+	Pos lexer.Position
+
 	Left  *Term     `@@`
 	Right []*OpTerm `@@*`
 }
 
 func (me *MetricExpression) GetQueries() map[string]string {
-	queries := me.Left.GetQueries()
+	queries := me.GroupedExpression.Left.GetQueries()
 
-	for _, v := range me.Right {
+	for _, v := range me.GroupedExpression.Right {
 		rightQueries := v.Term.GetQueries()
 
 		queries = append(queries, rightQueries...)
@@ -115,7 +130,6 @@ func NewMetricExpressionParser() *MetricExpressionParser {
 	mep := &MetricExpressionParser{
 		parser: participle.MustBuild[MetricExpression](
 			participle.Lexer(lex),
-			participle.Unquote("String"),
 		),
 	}
 
@@ -140,10 +154,13 @@ func (o Operator) String() string {
 
 func (expr *ExprValue) String() string {
 	if expr.Number != nil {
-		return fmt.Sprintf("%g", *expr.Number)
+		return formatFloatNoExp(*expr.Number)
 	}
 	if expr.MetricQuery != nil {
 		return expr.MetricQuery.String()
+	}
+	if expr.ExprAggregatorFuction != nil {
+		return expr.ExprAggregatorFuction.String()
 	}
 	return "(" + expr.Subexpression.String() + ")"
 }
@@ -170,8 +187,24 @@ func (o *OpTerm) String() string {
 }
 
 func (me *MetricExpression) String() string {
-	out := []string{me.Left.String()}
-	for _, r := range me.Right {
+	return me.GroupedExpression.String()
+}
+
+func (me *ExpressionAggregatorFuction) String() string {
+	args := []string{}
+	for _, v := range me.Args {
+		args = append(args, v.String())
+	}
+	argTail := ""
+	if len(args) > 0 {
+		argTail = ", " + strings.Join(args, ", ")
+	}
+	return fmt.Sprintf("%s(%s%s)", me.Name, me.Body.String(), argTail)
+}
+
+func (ge *GroupedExpression) String() string {
+	out := []string{ge.Left.String()}
+	for _, r := range ge.Right {
 		out = append(out, r.String())
 	}
 	return strings.Join(out, " ")

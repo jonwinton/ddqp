@@ -1,6 +1,9 @@
 package ddqp
 
 import (
+	"bufio"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -9,8 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_MetricQuery(t *testing.T) {
-	parser := NewMetricQueryParser()
+func Test_GenericParser_Parse(t *testing.T) {
+	parser := NewGenericParser()
 
 	tests := []struct {
 		name     string
@@ -19,8 +22,86 @@ func Test_MetricQuery(t *testing.T) {
 		printAST bool // For debugging, can opt in to print AST
 	}{
 		{
+			name:     "addition",
+			query:    "sum:metric.name{foo:bar} + sum:metric.name_two{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "subtraction",
+			query:    "sum:metric.name{foo:bar} - sum:metric.name_two{foo:bar} - 0.1",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "multiplication",
+			query:    "sum:metric.name{foo:bar} * sum:metric.name_two{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "division",
+			query:    "sum:metric.name{foo:bar} / sum:metric.name_two{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "parens",
+			query:    "(sum:metric.name{foo:bar} - sum:metric.name_two{foo:bar}) / sum:metric.name_two{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "filters with slashes",
+			query:    "sum:metric.name{foo:bar/hello} / sum:metric.name_two{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "parens division with int multiplication",
+			query:    "(sum:metric.name{foo:bar/hello} / sum:metric.name_two{baz:bang}) / 100",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "complex expression with multiple operators",
+			query:    "sum:metric.name{foo:bar} * sum:metric.name_two{foo:bar} + sum:metric.name_three{foo:bar} - 50",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "nested parentheses",
+			query:    "(sum:metric.name{foo:bar} - (sum:metric.name_two{foo:bar} * 2)) / 10",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "complex filters in expression",
+			query:    "sum:metric.name{env:prod AND service:api} - sum:metric.name{env:staging AND service:api}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "multiple arithmetic operations with constants",
+			query:    "sum:metric.name{*} * 2",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "expression with grouping in metrics",
+			query:    "sum:metric.name{foo:bar} / sum:metric.name_two{foo:bar}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "expression with numeric values in filters",
+			query:    "sum:metric.name{code:200} / sum:metric.name_two{code:200}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
 			name:     "simple query",
-			query:    "moving_rollup(default_zero(sum:metric{key:value,!service:service,env:staging}.as_rate()), 60, 'avg')",
+			query:    "moving_rollup(default_zero(sum:framework.actions.service_api.response_codes{veneur_app:comments,!grpc_service:statushandler,env:staging}.as_rate()), 60, 'avg')",
 			wantErr:  false,
 			printAST: false,
 		},
@@ -177,33 +258,21 @@ func Test_MetricQuery(t *testing.T) {
 			printAST: false,
 		},
 		{
-			name:     "query that starts with a metric name",
-			query:    "metric{filter:value-*}.as_rate()",
+			name:     "test complex query with wildcard filter",
+			query:    "envoy.http.downstream_rq_total{veneur_app:authz-engines,env:staging,listener:ingress,host:authz-engines-*}.as_rate()",
 			wantErr:  false,
 			printAST: false,
 		},
 		{
-			name:     "wildcard filter",
-			query:    "sum:metric{key:*}",
+			name:     "wrapping function around metric expression",
+			query:    "default_zero(avg:metric.name{foo:bar} + avg:other.metric.name{foo:bar})",
 			wantErr:  false,
 			printAST: false,
 		},
 		{
-			name:     "filter starts with wildcard and ends with wildcard",
-			query:    "avg:metric{key:*value-*}",
+			name:     "wrapping function around one metric inside of the metric expression",
+			query:    "default_zero(avg:metric.name{foo:bar}) + avg:other.metric.name{foo:bar}",
 			wantErr:  false,
-			printAST: false,
-		},
-		{
-			name:     "wildcard by",
-			query:    "avg:metric{key:*value-*} by {*}",
-			wantErr:  false,
-			printAST: false,
-		},
-		{
-			name:     "wildcard by error",
-			query:    "avg:metric{key:*value-*} by {*foo}",
-			wantErr:  true,
 			printAST: false,
 		},
 	}
@@ -226,4 +295,38 @@ func Test_MetricQuery(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_GenericParser_FromFile(t *testing.T) {
+	parser := NewGenericParser()
+
+	f, err := os.Open("./test_queries.txt")
+	if err != nil {
+		t.Skipf("skipping file-driven tests; could not open test_queries.txt: %v", err)
+		return
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	lineNum := 0
+	for scanner.Scan() {
+		lineNum++
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		t.Run("line_"+fmt.Sprintf("%d", lineNum), func(t *testing.T) {
+			ast, err := parser.Parse(line)
+			require.NoError(t, err, "failed to parse line %d: %s", lineNum, line)
+			want := strings.ReplaceAll(line, " ", "")
+			got := strings.ReplaceAll(ast.String(), " ", "")
+			want = strings.ToLower(want)
+			got = strings.ToLower(got)
+			assert.Equal(t, want, got)
+		})
+	}
+
+	require.NoError(t, scanner.Err())
 }
