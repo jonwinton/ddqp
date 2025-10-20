@@ -101,7 +101,7 @@ func Test_GenericParser_Parse(t *testing.T) {
 		},
 		{
 			name:     "simple query",
-			query:    "moving_rollup(default_zero(sum:framework.actions.service_api.response_codes{veneur_app:comments,!grpc_service:statushandler,env:staging}.as_rate()), 60, 'avg')",
+			query:    "moving_rollup(default_zero(sum:metric.name{app:bazz,env:staging}.as_rate()), 60, 'avg')",
 			wantErr:  false,
 			printAST: false,
 		},
@@ -259,7 +259,7 @@ func Test_GenericParser_Parse(t *testing.T) {
 		},
 		{
 			name:     "test complex query with wildcard filter",
-			query:    "envoy.http.downstream_rq_total{veneur_app:authz-engines,env:staging,listener:ingress,host:authz-engines-*}.as_rate()",
+			query:    "metric.name{app:bazz,env:staging,host:host-*}.as_rate()",
 			wantErr:  false,
 			printAST: false,
 		},
