@@ -289,8 +289,7 @@ func Test_GenericParser_Parse(t *testing.T) {
 
 			// Check to make sure we're able to restringify
 			if !tt.wantErr {
-				want := strings.ReplaceAll(tt.query, ", ", ",")
-				got := strings.ReplaceAll(ast.String(), ", ", ",")
+				want, got := sanitizeWantAndGot(tt.query, ast.String())
 				assert.Equal(t, want, got)
 			}
 		})
@@ -320,13 +319,24 @@ func Test_GenericParser_FromFile(t *testing.T) {
 		t.Run("line_"+fmt.Sprintf("%d", lineNum), func(t *testing.T) {
 			ast, err := parser.Parse(line)
 			require.NoError(t, err, "failed to parse line %d: %s", lineNum, line)
-			want := strings.ReplaceAll(line, " ", "")
-			got := strings.ReplaceAll(ast.String(), " ", "")
-			want = strings.ToLower(want)
-			got = strings.ToLower(got)
+			want, got := sanitizeWantAndGot(line, ast.String())
 			assert.Equal(t, want, got)
 		})
 	}
 
 	require.NoError(t, scanner.Err())
+}
+
+// we do not care about spacing in most places, but do want to make sure that in cases like AND NOT that
+// the query is actually parsing correctly and being returned with the correct spacing.
+func sanitizeWantAndGot(want, got string) (string, string) {
+	want = strings.ReplaceAll(want, ", ", ",")
+	got = strings.ReplaceAll(got, ", ", ",")
+	want = strings.ReplaceAll(want, " }", "}")
+	got = strings.ReplaceAll(got, " }", "}")
+	want = strings.ReplaceAll(want, "{ ", "{")
+	got = strings.ReplaceAll(got, "{ ", "{")
+	want = strings.ToLower(want)
+	got = strings.ToLower(got)
+	return want, got
 }

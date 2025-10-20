@@ -131,7 +131,7 @@ sum:relay.streaming_connections{env:dev, region:region-2} by {*}.fill(last, 30)
 default_zero(sum:demo.random_endpoint_200{cluster:cluster-dev}.as_rate())
 
 # Weighted example (generic)
-default_zero(sum:jobqueue.queue_size{cluster:cluster-dev , service:svc-o}.weighted())
+default_zero(sum:jobqueue.queue_size{cluster:cluster-dev, service:svc-o}.weighted())
 
 # Top with different service
  top(moving_rollup(max:kubernetes.cpu.usage.total{service:svc-p, region:region-2, env:dev, container:worker} / max:kubernetes.cpu.limits{service:svc-p, region:region-2, env:dev, container:worker} / (1000000 * 10), 30, 'max'), 1, 'max', 'desc')
