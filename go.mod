@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/alecthomas/participle/v2 v2.1.4
-	github.com/alecthomas/repr v0.4.0
+	github.com/alecthomas/repr v0.5.2
 	github.com/stretchr/testify v1.10.0
 )
 
