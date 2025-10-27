@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/jonwinton/ddqp"
 )
 
@@ -17,7 +18,7 @@ func main() {
 	// Example 1: Complex boolean logic in filters
 	fmt.Println("=== Example 1: Complex Boolean Logic in Filters ===")
 	query := `sum:http.requests{env:prod AND (service:api OR service:web) AND NOT status:500}`
-	
+
 	parsed, err := parser.Parse(query)
 	if err != nil {
 		panic(err)
@@ -28,28 +29,28 @@ func main() {
 
 	// Example 2: Using comparison operators in filters
 	fmt.Println("\n=== Example 2: Comparison Operators in Filters ===")
-	
+
 	// Greater than example
 	gtQuery := `sum:response_time{value:>500}`
 	gtParsed, err := parser.Parse(gtQuery)
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Less than example
 	ltQuery := `sum:error_rate{value:<0.01}`
 	ltParsed, err := parser.Parse(ltQuery)
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Greater than or equal example
 	gteQuery := `sum:cpu{usage:>=90}`
 	gteParsed, err := parser.Parse(gteQuery)
 	if err != nil {
 		panic(err)
 	}
-	
+
 	// Less than or equal example
 	lteQuery := `sum:memory{usage:<=75}`
 	lteParsed, err := parser.Parse(lteQuery)
@@ -74,10 +75,10 @@ func main() {
 
 	// Example 4: Building filters programmatically
 	fmt.Println("\n=== Example 4: Building Filters Programmatically ===")
-	
+
 	// Create a filter structure for: env:prod AND service:api
 	filter := &ddqp.MetricFilter{}
-	
+
 	// First part: env:prod
 	filter.Left = &ddqp.Param{}
 	filter.Left.SimpleFilter = &ddqp.SimpleFilter{}
@@ -87,14 +88,14 @@ func main() {
 	filter.Left.SimpleFilter.FilterValue.SimpleValue = &ddqp.Value{}
 	envVal := "prod"
 	filter.Left.SimpleFilter.FilterValue.SimpleValue.Identifier = &envVal
-	
+
 	// Add AND separator
 	filter.Parameters = append(filter.Parameters, &ddqp.Param{
 		Separator: &ddqp.FilterValueSeparator{
 			And: true,
 		},
 	})
-	
+
 	// Second part: service:api
 	svcParam := &ddqp.Param{}
 	svcParam.SimpleFilter = &ddqp.SimpleFilter{}
@@ -104,9 +105,9 @@ func main() {
 	svcParam.SimpleFilter.FilterValue.SimpleValue = &ddqp.Value{}
 	svcVal := "api"
 	svcParam.SimpleFilter.FilterValue.SimpleValue.Identifier = &svcVal
-	
+
 	filter.Parameters = append(filter.Parameters, svcParam)
-	
+
 	// Create a query using this filter
 	newQuery := &ddqp.MetricQuery{}
 	newQuery.Query = []*ddqp.Query{{
@@ -116,6 +117,6 @@ func main() {
 		Grouping:   []string{"host"},
 		By:         "by",
 	}}
-	
+
 	fmt.Printf("Programmatically Built Query: %s\n", newQuery.String())
 }

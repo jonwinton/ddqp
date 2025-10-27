@@ -9,36 +9,67 @@ import (
 )
 
 type MetricQuery struct {
-	Pos lexer.Position
+	Pos               lexer.Position
+	Query             *Query             `parser:"@@"`
+	AggregatorFuction *AggregatorFuction `parser:"| @@"`
+}
 
-	Query []*Query `parser:"@@"`
+type AggregatorFuction struct {
+	Pos  lexer.Position
+	Name string       `parser:"@Ident '('"`
+	Body *MetricQuery `parser:"@@"` // Query or AggregatorFuction
+	Args []*Value     `parser:"( ',' @@ )* ')'"`
 }
 
 func (mq *MetricQuery) String() string {
-	return mq.Query[0].String()
+	if mq.Query != nil {
+		return mq.Query.String()
+	}
+	return mq.AggregatorFuction.String()
+}
+
+// String prints wrapper(body, arg1, arg2, ...), allowing nested wrappers as body.
+func (w *AggregatorFuction) String() string {
+	args := []string{}
+	for _, v := range w.Args {
+		args = append(args, v.String())
+	}
+	argTail := ""
+	if len(args) > 0 {
+		argTail = ", " + strings.Join(args, ", ")
+	}
+	return fmt.Sprintf("%s(%s%s)", w.Name, w.Body.String(), argTail)
 }
 
 type Query struct {
 	Pos lexer.Position
 
-	Aggregator                string        `parser:"@Ident"`
-	SpaceAggregationCondition string        `parser:"( '(' @SpaceAggregatorCondition ')' )?"`
-	Separator                 string        `parser:"':'"`
-	MetricName                string        `parser:"@Ident( @'.' @Ident)*"`
-	Filters                   *MetricFilter `parser:"'{' @@ '}'"`
-	By                        string        `parser:"Ident?"`
-	Grouping                  []string      `parser:"'{'? ( @Ident ( ',' @Ident )* )? '}'?"`
-	Function                  []*Function   `parser:"( @@ ( '.' @@ )* )?"`
+	Aggregator *Aggregator   `parser:"@@?"`
+	MetricName string        `parser:"@Ident( @'.' @Ident)*"`
+	Filters    *MetricFilter `parser:"'{' @@ '}'"`
+	By         string        `parser:"('by')?"`
+	Grouping   []string      `parser:"( '{' ( @(Ident|'*') ( ',' @(Ident|'*') )* ) '}' )?"`
+	Function   []*Function   `parser:"( '.' @@ ( '.' @@ )* )?"`
+}
+
+type Aggregator struct {
+	Pos                       lexer.Position
+	Name                      string `parser:"@Ident"`
+	SpaceAggregationCondition string `parser:"( '(' @SpaceAggregatorCondition ')' )?"`
+	Separator                 string `parser:"':'"`
 }
 
 func (q *Query) String() string {
-	base := q.Aggregator
-
-	if q.SpaceAggregationCondition != "" {
-		base = fmt.Sprintf("%s(%s)", base, q.SpaceAggregationCondition)
+	base := ""
+	if q.Aggregator != nil {
+		base = q.Aggregator.Name
+		if q.Aggregator.SpaceAggregationCondition != "" {
+			base = fmt.Sprintf("%s(%s)", base, q.Aggregator.SpaceAggregationCondition)
+		}
+		base = fmt.Sprintf("%s:", base)
 	}
 
-	base = fmt.Sprintf("%s:%s{%s}", base, q.MetricName, q.Filters.String())
+	base = fmt.Sprintf("%s%s{%s}", base, q.MetricName, q.Filters.String())
 
 	if len(q.Grouping) > 0 {
 		base = fmt.Sprintf("%s by {%s}", base, strings.Join(q.Grouping, ","))
@@ -49,15 +80,15 @@ func (q *Query) String() string {
 		for _, v := range q.Function {
 			funcs = append(funcs, v.String())
 		}
-		return fmt.Sprintf("%s.%s", base, strings.Join(funcs, "."))
+		base = fmt.Sprintf("%s.%s", base, strings.Join(funcs, "."))
 	}
 
 	return base
 }
 
 type Function struct {
-	Name string   `"." @Ident`
-	Args []*Value `"(" ( @@ ( "," @@ )* )? ")"`
+	Name string   `parser:"@Ident"`
+	Args []*Value `parser:"'(' ( @@ ( ',' @@ )* )? ')'"`
 }
 
 func (f *Function) String() string {
@@ -79,7 +110,6 @@ func NewMetricQueryParser() *MetricQueryParser {
 	mqp := &MetricQueryParser{
 		parser: participle.MustBuild[MetricQuery](
 			participle.Lexer(lex),
-			participle.Unquote("String"),
 		),
 	}
 
