@@ -3,6 +3,7 @@ package main
 
 import (
 	"fmt"
+
 	"github.com/jonwinton/ddqp"
 )
 
@@ -60,11 +61,11 @@ func main() {
 	// This is a simplified example. In real usage, you would set more fields.
 	fmt.Println("\n=== Example 4: Create a metric query programmatically ===")
 	newParsed, _ := parser.Parse(`avg:system.cpu.idle{*} by {host}`)
-	
+
 	// Modify some fields
 	newParsed.Query[0].Aggregator = "max"
 	newParsed.Query[0].MetricName = "system.memory.used"
-	
+
 	// Create a simple filter programmatically
 	newFilter := &ddqp.MetricFilter{}
 	newFilter.Left = &ddqp.Param{}
@@ -75,9 +76,9 @@ func main() {
 	newFilter.Left.SimpleFilter.FilterValue.SimpleValue = &ddqp.Value{}
 	identifier := "production"
 	newFilter.Left.SimpleFilter.FilterValue.SimpleValue.Identifier = &identifier
-	
+
 	// Replace the filter
 	newParsed.Query[0].Filters = newFilter
-	
+
 	fmt.Printf("Programmatically Created Query: %s\n", newParsed.String())
 }

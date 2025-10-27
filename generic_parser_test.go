@@ -275,6 +275,12 @@ func Test_GenericParser_Parse(t *testing.T) {
 			wantErr:  false,
 			printAST: false,
 		},
+		{
+			name:     "test a really weird complex query",
+			query:    "default_zero(avg:system.cpu.user{foo:bar, (kube_cluster_name:test-cluster OR !kube_cluster_name:*)}.rollup(avg, 300)) + (avg:system.cpu.user{foo:bar, (kube_cluster_name:test-cluster OR !kube_cluster_name:*)} * 1000 + (100 / 10))",
+			wantErr:  false,
+			printAST: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -304,7 +310,9 @@ func Test_GenericParser_FromFile(t *testing.T) {
 		t.Skipf("skipping file-driven tests; could not open test_queries.txt: %v", err)
 		return
 	}
-	defer f.Close()
+	t.Cleanup(func() {
+		require.NoError(t, f.Close())
+	})
 
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 0, 64*1024), 1024*1024)

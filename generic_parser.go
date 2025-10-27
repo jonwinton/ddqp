@@ -4,8 +4,7 @@ import (
 	"strings"
 )
 
-type GenericParser struct {
-}
+type GenericParser struct{}
 
 func NewGenericParser() *GenericParser {
 	return &GenericParser{}
