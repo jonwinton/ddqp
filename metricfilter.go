@@ -163,6 +163,7 @@ type Value struct {
 	Identifier *string               `| "!"? @Ident ( @"." @Ident )*`
 	Str        *string               `| @(String)`
 	Number     *float64              `| @(Float|Int)`
+	Wildcard   *string               `| @(FilterIdent|'*')`
 }
 
 func (v *Value) String() string {
@@ -171,7 +172,7 @@ func (v *Value) String() string {
 	}
 
 	if v.Number != nil {
-		return fmt.Sprintf("%g", *v.Number)
+		return formatFloatNoExp(*v.Number)
 	}
 
 	if v.Identifier != nil {
@@ -180,6 +181,10 @@ func (v *Value) String() string {
 
 	if v.Separator != nil {
 		return v.Separator.String()
+	}
+
+	if v.Wildcard != nil {
+		return *v.Wildcard
 	}
 
 	return *v.Str

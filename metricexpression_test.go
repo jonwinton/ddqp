@@ -103,6 +103,30 @@ func Test_MetricExpressionCanParse(t *testing.T) {
 			wantErr:  false,
 			printAST: false,
 		},
+		{
+			name:     "math expression in the metric query",
+			query:    "sum:metric.name{foo:bar} * 100",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "multiple math expressions in the metric query",
+			query:    "max:metric.name{foo:bar} * 1000 * 1000 * 10",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "multiple math expressions in the metric query with grouping and other math expressions",
+			query:    "max:metric.name{foo:bar} / (1000 * 1000) + (10 - 10)",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "multiple queries with math expressions in the metric query with grouping and other math expressions",
+			query:    "(max:metric.name{foo:bar} / (1000 * 1000) + (10 - 10)) + (sum:metric.name{foo:bar} * 1000)",
+			wantErr:  false,
+			printAST: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
