@@ -63,7 +63,24 @@ func Indent(indent string) Option { return func(o *Printer) { o.indent = indent 
 func NoIndent() Option { return Indent("") }
 
 // OmitEmpty sets whether empty field members should be omitted from output.
-func OmitEmpty(omitEmpty bool) Option { return func(o *Printer) { o.omitEmpty = omitEmpty } }
+//
+// Empty field members are either the zero type, or zero-length maps and slices.
+func OmitEmpty(omitEmpty bool) Option {
+	return func(o *Printer) {
+		o.omitEmpty = omitEmpty
+	}
+}
+
+// OmitZero sets whether zero field members should be omitted from output.
+//
+// Field members are considered zero if they have an IsZero method that returns
+// true, or if [reflect.Value.IsZero] returns true. Empty maps and slices are
+// not zero.
+func OmitZero(omitZero bool) Option {
+	return func(o *Printer) {
+		o.omitZero = omitZero
+	}
+}
 
 // ExplicitTypes adds explicit typing to slice and map struct values that would normally be inferred by Go.
 func ExplicitTypes(ok bool) Option { return func(o *Printer) { o.explicitTypes = true } }
@@ -88,6 +105,13 @@ func Hide[T any]() Option {
 	}
 }
 
+// HideField excludes fields of structs that match the given name from representation.
+func HideField(name string) Option {
+	return func(o *Printer) {
+		o.excludeFields[name] = true
+	}
+}
+
 // AlwaysIncludeType always includes explicit type information for each item.
 func AlwaysIncludeType() Option { return func(o *Printer) { o.alwaysIncludeType = true } }
 
@@ -95,11 +119,13 @@ func AlwaysIncludeType() Option { return func(o *Printer) { o.alwaysIncludeType 
 type Printer struct {
 	indent            string
 	omitEmpty         bool
+	omitZero          bool
 	ignoreGoStringer  bool
 	ignorePrivate     bool
 	alwaysIncludeType bool
 	explicitTypes     bool
 	exclude           map[reflect.Type]bool
+	excludeFields     map[string]bool
 	w                 io.Writer
 	useLiterals       bool
 }
@@ -107,16 +133,24 @@ type Printer struct {
 // New creates a new Printer on w with the given Options.
 func New(w io.Writer, options ...Option) *Printer {
 	p := &Printer{
-		w:         w,
-		indent:    "  ",
-		omitEmpty: true,
-		exclude:   map[reflect.Type]bool{},
+		w:             w,
+		indent:        "  ",
+		omitEmpty:     true,
+		omitZero:      true,
+		exclude:       map[reflect.Type]bool{},
+		excludeFields: map[string]bool{},
 	}
 	for _, option := range options {
 		option(p)
 	}
 	return p
 }
+
+type isZeroer interface {
+	IsZero() bool
+}
+
+var isZeroerType = reflect.TypeFor[isZeroer]()
 
 func (p *Printer) nextIndent(indent string) string {
 	if p.indent != "" {
@@ -255,17 +289,26 @@ func (p *Printer) reprValue(seen map[reflect.Value]bool, v reflect.Value, indent
 				if p.exclude[t.Type] {
 					continue
 				}
+				if p.excludeFields[t.Name] {
+					continue
+				}
 				f := v.Field(i)
 				ft := f.Type()
 				// skip private fields
 				if p.ignorePrivate && !f.CanInterface() {
 					continue
 				}
+
+				if p.omitZero && ((ft.Implements(isZeroerType) && f.CanInterface() && f.Interface().(isZeroer).IsZero()) || f.IsZero()) {
+					continue
+				}
+
 				if p.omitEmpty && (f.IsZero() ||
 					ft.Kind() == reflect.Slice && f.Len() == 0 ||
 					ft.Kind() == reflect.Map && f.Len() == 0) {
 					continue
 				}
+
 				if previous && p.indent == "" {
 					fmt.Fprintf(p.w, ", ")
 				}
