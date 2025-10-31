@@ -89,6 +89,7 @@ type FilterSeparator struct {
 	In           bool `| @("IN" | "in") `
 	NotIn        bool `| @("NOT" "IN" | "not" "in")`
 	AndNot       bool `| @("AND" "NOT" | "and" "not")`
+	OrNot        bool `| @("OR" "NOT" | "or" "not")`
 }
 
 func (fs *FilterSeparator) String() string {
@@ -122,6 +123,10 @@ func (fs *FilterSeparator) String() string {
 
 	if fs.AndNot {
 		return " AND NOT "
+	}
+
+	if fs.OrNot {
+		return " OR NOT "
 	}
 
 	return " NOT IN "
@@ -194,6 +199,7 @@ type FilterValueSeparator struct {
 	Comma  bool ` @","`
 	AndNot bool `| @("AND" "NOT" | "and" "not")`
 	And    bool `| @("AND" | "and")`
+	OrNot  bool `| @("OR" "NOT" | "or" "not")`
 	Or     bool `| @("OR" | "or")`
 	In     bool `| @("IN" | "in")`
 }
@@ -213,6 +219,10 @@ func (fvs *FilterValueSeparator) String() string {
 
 	if fvs.AndNot {
 		return " AND NOT "
+	}
+
+	if fvs.OrNot {
+		return " OR NOT "
 	}
 
 	return " IN "
