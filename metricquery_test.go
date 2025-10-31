@@ -206,6 +206,12 @@ func Test_MetricQuery(t *testing.T) {
 			wantErr:  true,
 			printAST: false,
 		},
+		{
+			name:     "no filters",
+			query:    "sum:requests.count",
+			wantErr:  true,
+			printAST: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

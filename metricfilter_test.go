@@ -1,6 +1,7 @@
 package ddqp
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/alecthomas/participle/v2"
@@ -20,10 +21,11 @@ func Test_MetricMonitorFilter(t *testing.T) {
 	parser := newMetricFilterParser()
 
 	tests := []struct {
-		name     string
-		query    string
-		wantErr  bool
-		printAST bool // For debugging, can opt in to print AST
+		name       string
+		query      string
+		wantErr    bool
+		ignoreCase bool
+		printAST   bool // For debugging, can opt in to print AST
 	}{
 		{
 			name:     "test asterisk only",
@@ -62,10 +64,30 @@ func Test_MetricMonitorFilter(t *testing.T) {
 			printAST: true,
 		},
 		{
+			name:       "test simple lowercase and not separated filter",
+			query:      "a:b and c:d and not e:f",
+			ignoreCase: true,
+			wantErr:    false,
+			printAST:   true,
+		},
+		{
 			name:     "test simple OR separated filter",
 			query:    "a:b OR c:d OR e:f",
 			wantErr:  false,
 			printAST: false,
+		},
+		{
+			name:     "test simple OR NOT separated filter",
+			query:    "a:b OR NOT c:d OR NOT e:f",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:       "test simple lowercase or not separated filter",
+			query:      "a:b or c:d or not e:f",
+			ignoreCase: true,
+			wantErr:    false,
+			printAST:   true,
 		},
 		{
 			name:     "test simple parens filter",
@@ -283,8 +305,14 @@ func Test_MetricMonitorFilter(t *testing.T) {
 				repr.Println(ast)
 			}
 
-			// Check to make sure we're able to restringify
-			assert.Equal(t, tt.query, ast.String())
+			got := ast.String()
+			want := tt.query
+			if tt.ignoreCase {
+				got = strings.ToLower(got)
+				want = strings.ToLower(want)
+			}
+
+			assert.Equal(t, want, got)
 		})
 	}
 }
