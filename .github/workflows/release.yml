@@ -33,6 +33,6 @@ jobs:
           git-cliff --config cliff.toml -t "$TAG_NAME" > release_notes.md
 
           # Update the GitHub release with the generated notes
-          gh release edit "$TAG_NAME" --notes-file release_notes.md
+          gh release create "$TAG_NAME" --latest --notes-file release_notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
