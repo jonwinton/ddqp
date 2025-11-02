@@ -23,9 +23,9 @@ jobs:
             perf
             test
             chore
-          requireScope: false
-          subjectPattern: ^[A-Z].+$
+          requireScope: true
+          subjectPattern: ^(?![A-Z]).+$
           subjectPatternError: |
             The subject "{subject}" found in the pull request title "{title}"
-            didn't match the configured pattern. Please ensure that the subject
-            starts with an uppercase character.
+            didn't match the configured pattern (`^(?![A-Z]).+$`). Please ensure that the subject
+            **does not** start with an uppercase character.
