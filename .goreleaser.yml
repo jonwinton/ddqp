@@ -29,7 +29,7 @@ release:
     go get github.com/jonwinton/ddqp@{{.Tag}}
     ```
 
-# Changelog configuration - delegates to git-cliff
+# Changelog configuration - disabled, using git-cliff instead
 changelog:
   disable: true
 
