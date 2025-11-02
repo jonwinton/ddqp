@@ -35,11 +35,11 @@ func main() {
     if err != nil {
         panic(err)
     }
-    
+
     // Access structured data
     fmt.Printf("Aggregator: %s\n", query.Query[0].Aggregator)
     fmt.Printf("Metric Name: %s\n", query.Query[0].MetricName)
-    
+
     // Convert back to string
     fmt.Printf("Query String: %s\n", query.String())
 }
@@ -106,6 +106,7 @@ source ./bin/activate-hermit
 ### Conventional Commits
 
 This project follows [Conventional Commits](https://www.conventionalcommits.org/) for commit messages and PR titles. This enables:
+
 - Automatic changelog generation
 - Semantic versioning based on commit types
 - Better collaboration and git history
@@ -115,6 +116,7 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 See [COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md) for detailed guidelines.
 
 **Quick reference:**
+
 ```bash
 feat: add new feature
 fix: bug fix
@@ -141,10 +143,10 @@ git-cliff --config cliff.toml --unreleased
 ```
 
 The release workflow will:
+
 1. Calculate version using [svu](https://github.com/caarlos0/svu)
 2. Generate changelog using [git-cliff](https://git-cliff.org/)
-3. Create GitHub release using [GoReleaser](https://goreleaser.com/)
-4. Publish release notes automatically
+3. Publish release notes automatically
 
 See [RELEASE_SETUP.md](./RELEASE_SETUP.md) for detailed instructions.
 

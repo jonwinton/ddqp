@@ -24,23 +24,14 @@ jobs:
       - name: Init Hermit
         run: ./bin/hermit env -r >> $GITHUB_ENV
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: "~> v2"
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Generate and update release notes
         run: |
           # Get the tag name from the ref
           TAG_NAME=${GITHUB_REF#refs/tags/}
-          
+
           # Generate changelog for this release only
           git-cliff --config cliff.toml --latest --strip header > release_notes.md
-          
+
           # Update the GitHub release with the generated notes
           gh release edit "$TAG_NAME" --notes-file release_notes.md
         env:
