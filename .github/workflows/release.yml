@@ -30,7 +30,7 @@ jobs:
           TAG_NAME=${GITHUB_REF#refs/tags/}
 
           # Generate changelog for this release only
-          git-cliff --config cliff.toml --latest > release_notes.md
+          git-cliff --config cliff.toml -t "$TAG_NAME" > release_notes.md
 
           # Update the GitHub release with the generated notes
           gh release edit "$TAG_NAME" --notes-file release_notes.md
