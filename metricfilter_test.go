@@ -1,7 +1,6 @@
 package ddqp
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/alecthomas/participle/v2"
@@ -21,11 +20,11 @@ func Test_MetricMonitorFilter(t *testing.T) {
 	parser := newMetricFilterParser()
 
 	tests := []struct {
-		name       string
-		query      string
-		wantErr    bool
-		ignoreCase bool
-		printAST   bool // For debugging, can opt in to print AST
+		name      string
+		query     string
+		wantErr   bool
+		wantQuery string
+		printAST  bool // For debugging, can opt in to print AST
 	}{
 		{
 			name:     "test asterisk only",
@@ -64,11 +63,11 @@ func Test_MetricMonitorFilter(t *testing.T) {
 			printAST: true,
 		},
 		{
-			name:       "test simple lowercase and not separated filter",
-			query:      "a:b and c:d and not e:f",
-			ignoreCase: true,
-			wantErr:    false,
-			printAST:   true,
+			name:      "test simple lowercase and not separated filter",
+			query:     "a:b and c:d and not e:f",
+			wantQuery: "a:b AND c:d AND NOT e:f",
+			wantErr:   false,
+			printAST:  true,
 		},
 		{
 			name:     "test simple OR separated filter",
@@ -83,11 +82,11 @@ func Test_MetricMonitorFilter(t *testing.T) {
 			printAST: false,
 		},
 		{
-			name:       "test simple lowercase or not separated filter",
-			query:      "a:b or c:d or not e:f",
-			ignoreCase: true,
-			wantErr:    false,
-			printAST:   true,
+			name:      "test simple lowercase or not separated filter",
+			query:     "a:b or c:d or not e:f",
+			wantQuery: "a:b OR c:d OR NOT e:f",
+			wantErr:   false,
+			printAST:  true,
 		},
 		{
 			name:     "test simple parens filter",
@@ -265,31 +264,51 @@ func Test_MetricMonitorFilter(t *testing.T) {
 		},
 		{
 			name:     "test regex filter simple",
-			query:    "service:~simple-regex",
+			query:    "service:simple-regex",
 			wantErr:  false,
 			printAST: false,
 		},
 		{
 			name:     "test regex filter with API version pattern",
-			query:    "path:~simple-pattern",
+			query:    "path:simple-pattern",
 			wantErr:  false,
 			printAST: false,
 		},
 		{
 			name:     "test regex filter with AND operator",
-			query:    "service:~api-.* AND env:prod",
+			query:    "service:api-.* AND env:prod",
 			wantErr:  false,
 			printAST: false,
 		},
 		{
 			name:     "test regex filter with OR operator",
-			query:    "service:~simple-regex OR env:~simple-pattern",
+			query:    "service:simple-regex OR env:simple-pattern",
 			wantErr:  false,
 			printAST: false,
 		},
 		{
 			name:     "test regex filter in nested expression",
-			query:    "env:prod AND (service:~api-.* OR host:~web-.*)",
+			query:    "env:prod AND (service:api-.* OR host:web-.*)",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:      "test filter that starts with a not",
+			query:     "not env:prod and (service:api-.* OR host:web-.*)",
+			wantQuery: " NOT env:prod AND (service:api-.* OR host:web-.*)",
+			wantErr:   false,
+			printAST:  false,
+		},
+		{
+			name:      "test the most negative filter",
+			query:     "not env:prod and not (service:api-.* or not host:web-.*) and not service:simple-regex",
+			wantQuery: " NOT env:prod AND NOT (service:api-.* OR NOT host:web-.*) AND NOT service:simple-regex",
+			wantErr:   false,
+			printAST:  false,
+		},
+		{
+			name:     "test filter that starts with a not operator using !",
+			query:    "!env:prod",
 			wantErr:  false,
 			printAST: false,
 		},
@@ -305,14 +324,12 @@ func Test_MetricMonitorFilter(t *testing.T) {
 				repr.Println(ast)
 			}
 
-			got := ast.String()
 			want := tt.query
-			if tt.ignoreCase {
-				got = strings.ToLower(got)
-				want = strings.ToLower(want)
+			if tt.wantQuery != "" {
+				want = tt.wantQuery
 			}
 
-			assert.Equal(t, want, got)
+			assert.Equal(t, want, ast.String())
 		})
 	}
 }
