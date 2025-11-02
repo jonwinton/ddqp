@@ -103,6 +103,51 @@ source ./bin/activate-hermit
 ./bin/golangci-lint run
 ```
 
+### Conventional Commits
+
+This project follows [Conventional Commits](https://www.conventionalcommits.org/) for commit messages and PR titles. This enables:
+- Automatic changelog generation
+- Semantic versioning based on commit types
+- Better collaboration and git history
+
+**PR titles are validated by CI** to ensure they follow the format.
+
+See [COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md) for detailed guidelines.
+
+**Quick reference:**
+```bash
+feat: add new feature
+fix: bug fix
+docs: documentation changes
+test: add or update tests
+refactor: code refactoring
+perf: performance improvements
+chore: maintenance tasks
+```
+
+### Releases
+
+Releases are fully automated using conventional commits:
+
+```bash
+# Auto-detect next version and create release
+./scripts/create-release.sh
+
+# Preview what the next version will be
+svu next
+
+# Preview upcoming changelog
+git-cliff --config cliff.toml --unreleased
+```
+
+The release workflow will:
+1. Calculate version using [svu](https://github.com/caarlos0/svu)
+2. Generate changelog using [git-cliff](https://git-cliff.org/)
+3. Create GitHub release using [GoReleaser](https://goreleaser.com/)
+4. Publish release notes automatically
+
+See [RELEASE_SETUP.md](./RELEASE_SETUP.md) for detailed instructions.
+
 ## Supported Features
 
 - **Metric queries** with filtering and grouping
