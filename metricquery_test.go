@@ -212,6 +212,24 @@ func Test_MetricQuery(t *testing.T) {
 			wantErr:  true,
 			printAST: false,
 		},
+		{
+			name:     "negated filter value starting with slash",
+			query:    "sum:metric.name{!path:/health}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "filter value as template variable with accessor",
+			query:    "sum:metric.name{env:$env.value}",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "template variable, slash-prefixed negation, group-by, and as_count",
+			query:    "sum:http_server_requests.count{service:some-service,env:$env.value,!path:/health} by {path}.as_count()",
+			wantErr:  false,
+			printAST: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
