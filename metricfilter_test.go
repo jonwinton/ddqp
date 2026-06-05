@@ -312,6 +312,25 @@ func Test_MetricMonitorFilter(t *testing.T) {
 			wantErr:  false,
 			printAST: false,
 		},
+		{
+			name:     "test filter value starting with slash",
+			query:    "path:/health",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:     "test filter value as template variable with accessor",
+			query:    "env:$env.value",
+			wantErr:  false,
+			printAST: false,
+		},
+		{
+			name:      "test negated slash-prefixed value combined with template variable",
+			query:     "!path:/health AND env:$env.value",
+			wantQuery: "!path:/health AND env:$env.value",
+			wantErr:   false,
+			printAST:  false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
