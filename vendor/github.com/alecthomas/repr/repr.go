@@ -166,13 +166,30 @@ func (p *Printer) thisIndent(indent string) string {
 	return ""
 }
 
+type reference struct {
+	typeOf  reflect.Type
+	pointer unsafe.Pointer
+	length  int
+}
+
+func referenceFor(v reflect.Value) (reference, bool) {
+	switch v.Kind() {
+	case reflect.Map, reflect.Ptr:
+		return reference{typeOf: v.Type(), pointer: v.UnsafePointer()}, true
+	case reflect.Slice:
+		return reference{typeOf: v.Type(), pointer: v.UnsafePointer(), length: v.Len()}, true
+	default:
+		return reference{}, false
+	}
+}
+
 // Print the values.
 func (p *Printer) Print(vs ...any) {
 	for i, v := range vs {
 		if i > 0 {
 			fmt.Fprint(p.w, " ")
 		}
-		p.reprValue(map[reflect.Value]bool{}, reflect.ValueOf(v), "", true, false)
+		p.reprValue(map[reference]bool{}, reflect.ValueOf(v), "", true, false)
 	}
 }
 
@@ -182,23 +199,34 @@ func (p *Printer) Println(vs ...any) {
 		if i > 0 {
 			fmt.Fprint(p.w, " ")
 		}
-		p.reprValue(map[reflect.Value]bool{}, reflect.ValueOf(v), "", true, false)
+		p.reprValue(map[reference]bool{}, reflect.ValueOf(v), "", true, false)
 	}
-	fmt.Fprintln(p.w)
+	_, _ = fmt.Fprintln(p.w)
 }
 
 // showType is true if struct types should be shown. isAnyValue is true if the containing value is an "any" type.
-func (p *Printer) reprValue(seen map[reflect.Value]bool, v reflect.Value, indent string, showStructType bool, isAnyValue bool) { // nolint: gocyclo
-	if seen[v] {
-		fmt.Fprint(p.w, "...")
-		return
-	}
-	seen[v] = true
-	defer delete(seen, v)
-
-	if v.Kind() == reflect.Invalid || (v.Kind() == reflect.Ptr || v.Kind() == reflect.Map || v.Kind() == reflect.Chan || v.Kind() == reflect.Slice || v.Kind() == reflect.Func || v.Kind() == reflect.Interface) && v.IsNil() {
+func (p *Printer) reprValue(seen map[reference]bool, v reflect.Value, indent string, showStructType bool, isAnyValue bool) { // nolint: gocyclo
+	if v.Kind() == reflect.Invalid {
 		fmt.Fprint(p.w, "nil")
 		return
+	}
+	if (v.Kind() == reflect.Ptr || v.Kind() == reflect.Map || v.Kind() == reflect.Chan || v.Kind() == reflect.Slice || v.Kind() == reflect.Func || v.Kind() == reflect.Interface) && v.IsNil() {
+		if p.alwaysIncludeType || isAnyValue {
+			fmt.Fprintf(p.w, "(%s)(nil)", substAny(v.Type()))
+		} else {
+			fmt.Fprint(p.w, "nil")
+		}
+		return
+	}
+	if ref, ok := referenceFor(v); ok {
+		if seen[ref] {
+			if v.Kind() == reflect.Ptr {
+				fmt.Fprint(p.w, "&")
+			}
+			fmt.Fprint(p.w, "...")
+			return
+		}
+		seen[ref] = true
 	}
 	t := v.Type()
 
@@ -209,7 +237,7 @@ func (p *Printer) reprValue(seen map[reflect.Value]bool, v reflect.Value, indent
 
 	// If we can't access a private field directly with reflection, try and do so via unsafe.
 	if !v.CanInterface() && v.CanAddr() {
-		uv := reflect.NewAt(t, unsafe.Pointer(v.UnsafeAddr())).Elem()
+		uv := reflect.NewAt(t, unsafe.Pointer(v.UnsafeAddr())).Elem() //nolint
 		if uv.CanInterface() {
 			v = uv
 		}
@@ -299,8 +327,34 @@ func (p *Printer) reprValue(seen map[reflect.Value]bool, v reflect.Value, indent
 					continue
 				}
 
-				if p.omitZero && ((ft.Implements(isZeroerType) && f.CanInterface() && f.Interface().(isZeroer).IsZero()) || f.IsZero()) {
-					continue
+				if p.omitZero {
+					// check if this type is a nil pointer to a type implementing IsZero
+					// with a value receiver and, if so, avoid calling IsZero() on it as
+					// the method call will automatically dereference the nil pointer and
+					// panic.
+					var nilPtrValueReceiver bool
+					// interfaces can hold typed nil pointers. checkF extracts the dynamic
+					// underlying value from the interface to identify if the inner value
+					// is a nil pointer.
+					checkF := f
+					if checkF.Kind() == reflect.Interface {
+						checkF = checkF.Elem()
+					}
+					if checkF.Kind() == reflect.Pointer && checkF.IsNil() {
+						_, nilPtrValueReceiver = checkF.Type().Elem().MethodByName("IsZero")
+					}
+					// call the value's IsZero() if possible to determine if it should be
+					// omitted. If IsZero is not implemented or can't be called, then
+					// fall back to reflect.Value.IsZero().
+					isZero := f.IsZero()
+					if ft.Implements(isZeroerType) && f.CanInterface() && !nilPtrValueReceiver {
+						if iface := f.Interface(); iface != nil {
+							isZero = iface.(isZeroer).IsZero()
+						}
+					}
+					if isZero {
+						continue
+					}
 				}
 
 				if p.omitEmpty && (f.IsZero() ||
@@ -438,7 +492,7 @@ func timeToGo(w io.Writer, t time.Time) {
 		zone = "nil"
 	case time.UTC:
 		zone = "time.UTC"
-	case time.Local:
+	case time.Local: //nolint
 		zone = "time.Local"
 	default:
 		n, off := t.Zone()
@@ -476,6 +530,8 @@ func substAny(t reflect.Type) string {
 			return "func" + t.Name() + "(" + strings.Join(in, ", ") + ")"
 		}
 		return "func" + t.Name() + "(" + strings.Join(in, ", ") + ") (" + strings.Join(out, ", ") + ")"
+
+	default:
 	}
 
 	if t == anyType {
